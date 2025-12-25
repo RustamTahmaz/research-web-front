@@ -1,9 +1,15 @@
 import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Leaf, User, ShoppingCart } from "lucide-react";
+import { Menu, X, Leaf, User, ShoppingCart, LogOut } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const navLinks = [
     { name: "Home", href: "#" },
@@ -13,12 +19,21 @@ const Navbar = () => {
     { name: "About", href: "#about" },
   ];
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast({
+      title: "Signed out",
+      description: "You have been successfully signed out.",
+    });
+    navigate("/");
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <a href="#" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft group-hover:shadow-glow-primary transition-all duration-300">
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -26,7 +41,7 @@ const Navbar = () => {
               <span className="font-bold text-lg text-foreground leading-tight">FarmMarket</span>
               <span className="text-[10px] text-muted-foreground leading-tight">Azerbaijan</span>
             </div>
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
@@ -46,11 +61,27 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" className="text-muted-foreground">
               <ShoppingCart className="w-5 h-5" />
             </Button>
-            <Button variant="outline" className="gap-2">
-              <User className="w-4 h-4" />
-              Sign In
-            </Button>
-            <Button>Start Selling</Button>
+            
+            {user ? (
+              <>
+                <Button variant="outline" className="gap-2" onClick={handleSignOut}>
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/auth">
+                  <Button variant="outline" className="gap-2">
+                    <User className="w-4 h-4" />
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/auth">
+                  <Button>Start Selling</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -77,11 +108,24 @@ const Navbar = () => {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4 px-4">
-                <Button variant="outline" className="w-full gap-2">
-                  <User className="w-4 h-4" />
-                  Sign In
-                </Button>
-                <Button className="w-full">Start Selling</Button>
+                {user ? (
+                  <Button variant="outline" className="w-full gap-2" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4" />
+                    Sign Out
+                  </Button>
+                ) : (
+                  <>
+                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                      <Button variant="outline" className="w-full gap-2">
+                        <User className="w-4 h-4" />
+                        Sign In
+                      </Button>
+                    </Link>
+                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                      <Button className="w-full">Start Selling</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
