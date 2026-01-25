@@ -1,14 +1,15 @@
+import { Link } from "react-router-dom";
 import { Apple, Carrot, Egg, Milk, Wheat, Grape, Cherry, Salad } from "lucide-react";
 
 const categories = [
-  { name: "Fruits", icon: Apple, color: "bg-red-100 text-red-600", count: 234 },
-  { name: "Vegetables", icon: Carrot, color: "bg-orange-100 text-orange-600", count: 189 },
-  { name: "Dairy", icon: Milk, color: "bg-blue-100 text-blue-600", count: 76 },
-  { name: "Eggs", icon: Egg, color: "bg-amber-100 text-amber-600", count: 54 },
-  { name: "Grains", icon: Wheat, color: "bg-yellow-100 text-yellow-700", count: 98 },
-  { name: "Grapes", icon: Grape, color: "bg-purple-100 text-purple-600", count: 67 },
-  { name: "Berries", icon: Cherry, color: "bg-pink-100 text-pink-600", count: 45 },
-  { name: "Greens", icon: Salad, color: "bg-green-100 text-green-600", count: 112 },
+  { name: "Fruits", icon: Apple, color: "bg-red-100 text-red-600" },
+  { name: "Vegetables", icon: Carrot, color: "bg-orange-100 text-orange-600" },
+  { name: "Dairy", icon: Milk, color: "bg-blue-100 text-blue-600" },
+  { name: "Eggs", icon: Egg, color: "bg-amber-100 text-amber-600" },
+  { name: "Grains", icon: Wheat, color: "bg-yellow-100 text-yellow-700" },
+  { name: "Grapes", icon: Grape, color: "bg-purple-100 text-purple-600" },
+  { name: "Berries", icon: Cherry, color: "bg-pink-100 text-pink-600" },
+  { name: "Greens", icon: Salad, color: "bg-green-100 text-green-600" },
 ];
 
 const CategoriesSection = () => {
@@ -31,9 +32,9 @@ const CategoriesSection = () => {
         {/* Categories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
           {categories.map((category, index) => (
-            <a
+            <Link
               key={category.name}
-              href="#"
+              to={`/products?category=${encodeURIComponent(category.name)}`}
               className="group relative bg-card rounded-2xl p-6 lg:p-8 border border-border hover:border-primary/30 shadow-soft hover:shadow-medium transition-all duration-300 hover-lift animate-fade-in-up"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -44,7 +45,7 @@ const CategoriesSection = () => {
                 {category.name}
               </h3>
               <p className="text-sm text-muted-foreground">
-                {category.count} products
+                Browse products
               </p>
               {/* Hover Arrow */}
               <div className="absolute top-6 right-6 w-8 h-8 rounded-full bg-muted flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
@@ -52,7 +53,7 @@ const CategoriesSection = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                 </svg>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </div>
