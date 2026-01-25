@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Search, ShoppingBag, Truck, Star, UserPlus, Package, CreditCard, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -95,9 +96,11 @@ const HowItWorksSection = () => {
                 </div>
               ))}
             </div>
-            <Button className="mt-8" size="lg">
-              Start Shopping
-            </Button>
+            <Link to="/products">
+              <Button className="mt-8" size="lg">
+                Start Shopping
+              </Button>
+            </Link>
           </div>
 
           {/* For Farmers */}
@@ -129,9 +132,11 @@ const HowItWorksSection = () => {
                 </div>
               ))}
             </div>
-            <Button variant="secondary" className="mt-8" size="lg">
-              Register as Farmer
-            </Button>
+            <Link to="/auth?mode=register&role=farmer">
+              <Button variant="secondary" className="mt-8" size="lg">
+                Register as Farmer
+              </Button>
+            </Link>
           </div>
         </div>
       </div>
