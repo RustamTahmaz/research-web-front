@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
-import { Search, ShoppingBag, Truck, Star, UserPlus, Package, CreditCard, MessageSquare } from "lucide-react";
+import { Search, ShoppingBag, Truck, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const buyerSteps = [
   {
@@ -25,30 +26,11 @@ const buyerSteps = [
   },
 ];
 
-const farmerSteps = [
-  {
-    icon: UserPlus,
-    title: "Create Profile",
-    description: "Sign up, verify your farm, and create your seller profile in minutes.",
-  },
-  {
-    icon: Package,
-    title: "List Products",
-    description: "Add your fresh produce with photos, prices, and available quantities.",
-  },
-  {
-    icon: MessageSquare,
-    title: "Connect & Sell",
-    description: "Receive orders, communicate with buyers, and grow your customer base.",
-  },
-  {
-    icon: Star,
-    title: "Build Reputation",
-    description: "Deliver quality, earn reviews, and become a trusted seller on the platform.",
-  },
-];
-
 const HowItWorksSection = () => {
+  const { user } = useAuth();
+  const role = user?.user_metadata?.role;
+  const browseHref = !user ? "/auth?mode=login" : role === "customer" ? "/products" : "/dashboard";
+
   return (
     <section id="how-it-works" className="py-20 lg:py-28 bg-muted/50">
       <div className="container mx-auto px-4">
@@ -65,9 +47,7 @@ const HowItWorksSection = () => {
           </p>
         </div>
 
-        {/* Two Columns */}
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16">
-          {/* For Buyers */}
+        <div className="max-w-3xl mx-auto">
           <div className="animate-slide-in-left">
             <div className="flex items-center gap-3 mb-8">
               <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
@@ -96,45 +76,9 @@ const HowItWorksSection = () => {
                 </div>
               ))}
             </div>
-            <Link to="/products">
+            <Link to={browseHref}>
               <Button className="mt-8" size="lg">
                 Start Shopping
-              </Button>
-            </Link>
-          </div>
-
-          {/* For Farmers */}
-          <div id="farmers" className="animate-slide-in-right">
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
-                <Package className="w-6 h-6 text-secondary-foreground" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-foreground">For Farmers</h3>
-                <p className="text-sm text-muted-foreground">Sell directly to buyers</p>
-              </div>
-            </div>
-            <div className="space-y-6">
-              {farmerSteps.map((step, index) => (
-                <div key={step.title} className="flex gap-4 group">
-                  <div className="relative">
-                    <div className="w-12 h-12 rounded-full bg-card border-2 border-secondary/30 flex items-center justify-center shrink-0 group-hover:border-secondary group-hover:bg-secondary/10 transition-all duration-300">
-                      <step.icon className="w-5 h-5 text-secondary" />
-                    </div>
-                    {index < farmerSteps.length - 1 && (
-                      <div className="absolute top-12 left-1/2 -translate-x-1/2 w-0.5 h-6 bg-border" />
-                    )}
-                  </div>
-                  <div className="pt-1">
-                    <h4 className="font-semibold text-foreground mb-1">{step.title}</h4>
-                    <p className="text-sm text-muted-foreground">{step.description}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <Link to="/auth?mode=register&role=farmer">
-              <Button variant="secondary" className="mt-8" size="lg">
-                Register as Farmer
               </Button>
             </Link>
           </div>

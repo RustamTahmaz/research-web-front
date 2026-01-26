@@ -1,8 +1,14 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, TrendingUp, Truck } from "lucide-react";
 import heroImage from "@/assets/hero-farm.jpg";
+import { useAuth } from "@/hooks/useAuth";
 
 const HeroSection = () => {
+  const { user } = useAuth();
+  const role = user?.user_metadata?.role;
+  const browseHref = !user ? "/auth?mode=login" : role === "customer" ? "/products" : "/dashboard";
+
   return (
     <section className="relative min-h-screen pt-20 overflow-hidden">
       {/* Background Image */}
@@ -42,13 +48,12 @@ const HeroSection = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-wrap gap-4 mb-12 animate-fade-in-up delay-300">
-            <Button variant="heroGolden" size="xl" className="group">
-              Browse Products
-              <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-            <Button variant="heroOutline" size="xl">
-              Start Selling
-            </Button>
+            <Link to={browseHref}>
+              <Button variant="heroGolden" size="xl" className="group">
+                Browse Products
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
+            </Link>
           </div>
 
           {/* Stats */}

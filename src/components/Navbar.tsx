@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Leaf, User, ShoppingCart, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,13 +13,35 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const navLinks = [
-    { name: "Home", href: "#" },
-    { name: "Browse Products", href: "#products" },
-    { name: "For Farmers", href: "#farmers" },
-    { name: "How It Works", href: "#how-it-works" },
-    { name: "About", href: "#about" },
-  ];
+  const { data: profile } = useQuery({
+    queryKey: ["profile-role", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!user,
+  });
+
+  const isFarmer = profile?.role === "farmer";
+
+  const navLinks = isFarmer
+    ? [
+        { name: "Dashboard", href: "/dashboard", isRoute: true },
+        { name: "Marketplace", href: "/farmers", isRoute: true },
+        { name: "Products", href: "/products", isRoute: true },
+      ]
+    : [
+        { name: "Home", href: "#", isRoute: false },
+        { name: "Browse Products", href: "#products", isRoute: false },
+        { name: "How It Works", href: "#how-it-works", isRoute: false },
+        { name: "About", href: "#about", isRoute: false },
+      ];
 
   const handleSignOut = async () => {
     await signOut();
@@ -33,7 +57,7 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to={isFarmer ? "/dashboard" : "/"} className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center shadow-soft group-hover:shadow-glow-primary transition-all duration-300">
               <Leaf className="w-5 h-5 text-primary-foreground" />
             </div>
@@ -45,15 +69,25 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.isRoute ? (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200"
+                >
+                  {link.name}
+                </Link>
+              ) : (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200"
+                >
+                  {link.name}
+                </a>
+              )
+            )}
           </div>
 
           {/* Desktop Actions */}
@@ -63,23 +97,23 @@ const Navbar = () => {
             </Button>
             
             {user ? (
-              <>
-                <Button variant="outline" className="gap-2" onClick={handleSignOut}>
-                  <LogOut className="w-4 h-4" />
-                  Sign Out
-                </Button>
-              </>
+              <Button variant="outline" className="gap-2" onClick={handleSignOut}>
+                <LogOut className="w-4 h-4" />
+                Sign Out
+              </Button>
             ) : (
               <>
-                <Link to="/auth">
+                <Link to="/auth?mode=login">
                   <Button variant="outline" className="gap-2">
                     <User className="w-4 h-4" />
                     Sign In
                   </Button>
                 </Link>
-                <Link to="/auth">
-                  <Button>Start Selling</Button>
-                </Link>
+                {profile?.role !== "customer" && (
+                  <Link to="/auth?mode=register&role=farmer">
+                    <Button>Start Selling</Button>
+                  </Link>
+                )}
               </>
             )}
           </div>
@@ -97,16 +131,27 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border animate-fade-in-down">
             <div className="flex flex-col gap-2">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="px-4 py-3 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.isRoute ? (
+                  <Link
+                    key={link.name}
+                    to={link.href}
+                    className="px-4 py-3 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="px-4 py-3 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                )
+              )}
               <div className="flex flex-col gap-2 mt-4 px-4">
                 {user ? (
                   <Button variant="outline" className="w-full gap-2" onClick={handleSignOut}>
@@ -115,15 +160,17 @@ const Navbar = () => {
                   </Button>
                 ) : (
                   <>
-                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
+                    <Link to="/auth?mode=login" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="outline" className="w-full gap-2">
                         <User className="w-4 h-4" />
                         Sign In
                       </Button>
                     </Link>
-                    <Link to="/auth" onClick={() => setIsMenuOpen(false)}>
-                      <Button className="w-full">Start Selling</Button>
-                    </Link>
+                    {profile?.role !== "customer" && (
+                      <Link to="/auth?mode=register&role=farmer" onClick={() => setIsMenuOpen(false)}>
+                        <Button className="w-full">Start Selling</Button>
+                      </Link>
+                    )}
                   </>
                 )}
               </div>

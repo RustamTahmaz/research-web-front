@@ -1,4 +1,5 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -8,9 +9,18 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Calendar, Package, ArrowLeft, Leaf } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const FarmerDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { user, loading } = useAuth();
+
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth?mode=login", { replace: true });
+    }
+  }, [loading, user, navigate]);
 
   const { data: farmer, isLoading: farmerLoading } = useQuery({
     queryKey: ["farmer", id],
@@ -92,8 +102,8 @@ const FarmerDetail = () => {
             <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-foreground mb-2">Farmer Not Found</h1>
             <p className="text-muted-foreground mb-6">This farmer profile doesn't exist or has been removed.</p>
-            <Link to="/products">
-              <Button>Browse All Products</Button>
+            <Link to="/farmers">
+              <Button>Browse All Farmers</Button>
             </Link>
           </div>
         </main>
@@ -110,11 +120,11 @@ const FarmerDetail = () => {
           <div className="container mx-auto px-4">
             {/* Back Button */}
             <Link
-              to="/products"
+              to="/farmers"
               className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Products
+              Back to Farmers
             </Link>
 
             {/* Farmer Header */}
@@ -190,7 +200,7 @@ const FarmerDetail = () => {
                           )}
                           <div className="flex items-center justify-between">
                             <span className="text-lg font-bold text-primary">
-                              ₼{product.price}/{product.unit}
+                              AZN {product.price}/{product.unit}
                             </span>
                             <span className="text-sm text-muted-foreground">
                               {product.quantity_available} {product.unit} available

@@ -6,8 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Leaf, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const FeaturedFarmersSection = () => {
+  const { user } = useAuth();
+  const role = user?.user_metadata?.role;
+  const farmersHref = !user ? "/auth?mode=login" : role === "customer" ? "/farmers" : "/dashboard";
+  const farmerDetailHref = (farmerId: string) =>
+    !user ? "/auth?mode=login" : role === "customer" ? `/farmer/${farmerId}` : "/dashboard";
   const { data: farmers, isLoading } = useQuery({
     queryKey: ["featured-farmers"],
     queryFn: async () => {
@@ -73,10 +79,10 @@ const FeaturedFarmersSection = () => {
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
               Join FarmMarket and become a featured producer. Reach thousands of customers directly.
             </p>
-            <Link to="/auth?mode=register&role=farmer">
+            <Link to={farmersHref}>
               <Button size="lg">
                 <Leaf className="w-4 h-4 mr-2" />
-                Register as Farmer
+                View Farmers
               </Button>
             </Link>
           </div>
@@ -89,7 +95,7 @@ const FeaturedFarmersSection = () => {
               {farmers.map((farmer, index) => (
                 <Link
                   key={farmer.id}
-                  to={`/farmer/${farmer.id}`}
+                  to={farmerDetailHref(farmer.id)}
                   className="group animate-fade-in-up"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
@@ -143,7 +149,7 @@ const FeaturedFarmersSection = () => {
               ))}
             </div>
             <div className="text-center mt-10">
-              <Link to="/products">
+              <Link to={farmersHref}>
                 <Button variant="outline" size="lg">
                   View All Farmers
                   <ArrowRight className="w-4 h-4 ml-2" />

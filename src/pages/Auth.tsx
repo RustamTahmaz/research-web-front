@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Leaf, Tractor, ShoppingBag, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
@@ -19,6 +20,7 @@ const phoneSchema = z.string().trim().max(20, "Phone number is too long").option
 
 const Auth = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
   
@@ -44,9 +46,29 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !loading) {
-      navigate("/");
+      const role = user.user_metadata?.role;
+      navigate(role === "farmer" ? "/dashboard" : "/");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const modeParam = searchParams.get("mode");
+    const roleParam = searchParams.get("role");
+
+    if (modeParam === "login" || modeParam === "register") {
+      setAuthMode(modeParam);
+    }
+
+    if (modeParam === "register") {
+      if (roleParam === "farmer" || roleParam === "customer") {
+        setSelectedRole(roleParam);
+      } else {
+        setSelectedRole(null);
+      }
+    } else if (modeParam === "login") {
+      setSelectedRole(null);
+    }
+  }, [searchParams]);
 
   const validateForm = (): string | null => {
     try {
@@ -102,7 +124,9 @@ const Auth = () => {
             title: "Welcome back!",
             description: "You have successfully signed in.",
           });
-          navigate("/");
+          const { data } = await supabase.auth.getUser();
+          const role = data.user?.user_metadata?.role;
+          navigate(role === "farmer" ? "/dashboard" : "/");
         }
       } else {
         if (!selectedRole) {
@@ -140,7 +164,9 @@ const Auth = () => {
             title: "Account Created!",
             description: "Welcome to FarmMarket Azerbaijan!",
           });
-          navigate("/");
+          const { data } = await supabase.auth.getUser();
+          const role = data.user?.user_metadata?.role;
+          navigate(role === "farmer" ? "/dashboard" : "/");
         }
       }
     } catch (error) {

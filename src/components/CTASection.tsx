@@ -1,8 +1,13 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Leaf, ShoppingCart } from "lucide-react";
+import { ArrowRight, ShoppingCart } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const CTASection = () => {
+  const { user } = useAuth();
+  const role = user?.user_metadata?.role;
+  const browseHref = !user ? "/auth?mode=login" : role === "customer" ? "/products" : "/dashboard";
+
   return (
     <section className="py-20 lg:py-28 bg-background">
       <div className="container mx-auto px-4">
@@ -22,17 +27,11 @@ const CTASection = () => {
                 FarmMarket connects you directly. No middlemen, fair prices, farm-fresh quality.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link to="/products">
+                <Link to={browseHref}>
                   <Button variant="heroGolden" size="xl" className="group">
                     <ShoppingCart className="w-5 h-5" />
                     Start Shopping
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Link to="/auth?mode=register&role=farmer">
-                  <Button variant="heroOutline" size="xl" className="group">
-                    <Leaf className="w-5 h-5" />
-                    Register as Farmer
                   </Button>
                 </Link>
               </div>

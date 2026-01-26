@@ -1,18 +1,19 @@
 import { Link } from "react-router-dom";
-import { Apple, Carrot, Egg, Milk, Wheat, Grape, Cherry, Salad } from "lucide-react";
-
-const categories = [
-  { name: "Fruits", icon: Apple, color: "bg-red-100 text-red-600" },
-  { name: "Vegetables", icon: Carrot, color: "bg-orange-100 text-orange-600" },
-  { name: "Dairy", icon: Milk, color: "bg-blue-100 text-blue-600" },
-  { name: "Eggs", icon: Egg, color: "bg-amber-100 text-amber-600" },
-  { name: "Grains", icon: Wheat, color: "bg-yellow-100 text-yellow-700" },
-  { name: "Grapes", icon: Grape, color: "bg-purple-100 text-purple-600" },
-  { name: "Berries", icon: Cherry, color: "bg-pink-100 text-pink-600" },
-  { name: "Greens", icon: Salad, color: "bg-green-100 text-green-600" },
-];
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { CATEGORIES } from "@/lib/categories";
 
 const CategoriesSection = () => {
+  const { user } = useAuth();
+  const role = user?.user_metadata?.role;
+  const productsHref = !user ? "/auth?mode=login" : role === "customer" ? "/products" : "/dashboard";
+  const categoryHref = (name: string) =>
+    !user
+      ? "/auth?mode=login"
+      : role === "customer"
+      ? `/farmers?category=${encodeURIComponent(name)}`
+      : "/dashboard";
+
   return (
     <section id="products" className="py-20 lg:py-28 bg-background">
       <div className="container mx-auto px-4">
@@ -31,10 +32,10 @@ const CategoriesSection = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
-          {categories.map((category, index) => (
+          {CATEGORIES.map((category, index) => (
             <Link
               key={category.name}
-              to={`/products?category=${encodeURIComponent(category.name)}`}
+              to={categoryHref(category.name)}
               className="group relative bg-card rounded-2xl p-6 lg:p-8 border border-border hover:border-primary/30 shadow-soft hover:shadow-medium transition-all duration-300 hover-lift animate-fade-in-up"
               style={{ animationDelay: `${index * 50}ms` }}
             >
@@ -55,6 +56,13 @@ const CategoriesSection = () => {
               </div>
             </Link>
           ))}
+        </div>
+        <div className="text-center mt-10">
+          <Link to={productsHref}>
+            <Button variant="outline" size="lg">
+              View All Products
+            </Button>
+          </Link>
         </div>
       </div>
     </section>
