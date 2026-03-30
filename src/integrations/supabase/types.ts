@@ -185,6 +185,177 @@ export type Database = {
         }
         Relationships: []
       }
+      order_requests: {
+        Row: {
+          counter_quantity: number | null
+          created_at: string
+          customer_id: string
+          customer_message: string | null
+          customer_hidden: boolean
+          delivery_address: string | null
+          delivery_distance_km: number | null
+          delivery_fee: number
+          delivery_method: Database["public"]["Enums"]["delivery_method"] | null
+          delivery_notes: string | null
+          delivery_provider_type: Database["public"]["Enums"]["delivery_provider_type"] | null
+          delivery_schedule_type: Database["public"]["Enums"]["delivery_schedule_type"] | null
+          delivery_scheduled_for: string | null
+          delivery_status: Database["public"]["Enums"]["delivery_status"] | null
+          farmer_id: string
+          farmer_message: string | null
+          farmer_hidden: boolean
+          id: string
+          product_id: string
+          refund_status: Database["public"]["Enums"]["refund_status"]
+          requested_quantity: number
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at: string
+        }
+        Insert: {
+          counter_quantity?: number | null
+          created_at?: string
+          customer_id: string
+          customer_message?: string | null
+          customer_hidden?: boolean
+          delivery_address?: string | null
+          delivery_distance_km?: number | null
+          delivery_fee?: number
+          delivery_method?: Database["public"]["Enums"]["delivery_method"] | null
+          delivery_notes?: string | null
+          delivery_provider_type?: Database["public"]["Enums"]["delivery_provider_type"] | null
+          delivery_schedule_type?: Database["public"]["Enums"]["delivery_schedule_type"] | null
+          delivery_scheduled_for?: string | null
+          delivery_status?: Database["public"]["Enums"]["delivery_status"] | null
+          farmer_id: string
+          farmer_message?: string | null
+          farmer_hidden?: boolean
+          id?: string
+          product_id: string
+          refund_status?: Database["public"]["Enums"]["refund_status"]
+          requested_quantity: number
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+        }
+        Update: {
+          counter_quantity?: number | null
+          created_at?: string
+          customer_id?: string
+          customer_message?: string | null
+          customer_hidden?: boolean
+          delivery_address?: string | null
+          delivery_distance_km?: number | null
+          delivery_fee?: number
+          delivery_method?: Database["public"]["Enums"]["delivery_method"] | null
+          delivery_notes?: string | null
+          delivery_provider_type?: Database["public"]["Enums"]["delivery_provider_type"] | null
+          delivery_schedule_type?: Database["public"]["Enums"]["delivery_schedule_type"] | null
+          delivery_scheduled_for?: string | null
+          delivery_status?: Database["public"]["Enums"]["delivery_status"] | null
+          farmer_id?: string
+          farmer_message?: string | null
+          farmer_hidden?: boolean
+          id?: string
+          product_id?: string
+          refund_status?: Database["public"]["Enums"]["refund_status"]
+          requested_quantity?: number
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_requests_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "farmer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_requests_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_reviews: {
+        Row: {
+          created_at: string
+          customer_id: string
+          farmer_id: string
+          farmer_rating: number | null
+          farmer_review_text: string | null
+          id: string
+          order_request_id: string
+          product_id: string
+          product_rating: number | null
+          product_review_text: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          farmer_id: string
+          farmer_rating?: number | null
+          farmer_review_text?: string | null
+          id?: string
+          order_request_id: string
+          product_id: string
+          product_rating?: number | null
+          product_review_text?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          farmer_id?: string
+          farmer_rating?: number | null
+          farmer_review_text?: string | null
+          id?: string
+          order_request_id?: string
+          product_id?: string
+          product_rating?: number | null
+          product_review_text?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_reviews_order_request_id_fkey"
+            columns: ["order_request_id"]
+            isOneToOne: true
+            referencedRelation: "order_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_reviews_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_reviews_farmer_id_fkey"
+            columns: ["farmer_id"]
+            isOneToOne: false
+            referencedRelation: "farmer_profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -193,6 +364,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      delivery_method: "pickup" | "third_party"
+      delivery_provider_type: "farmer" | "company" | "local_carrier"
+      delivery_schedule_type: "asap" | "scheduled"
+      delivery_status: "pending_pickup" | "in_transit" | "delivered"
+      order_status: "pending" | "approved" | "declined" | "confirmed" | "fulfilled" | "countered"
+      refund_status: "none" | "requested" | "refunded"
       user_role: "farmer" | "customer"
     }
     CompositeTypes: {
@@ -321,6 +498,11 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      delivery_method: ["pickup", "third_party"],
+      delivery_provider_type: ["farmer", "company", "local_carrier"],
+      delivery_schedule_type: ["asap", "scheduled"],
+      delivery_status: ["pending_pickup", "in_transit", "delivered"],
+      refund_status: ["none", "requested", "refunded"],
       user_role: ["farmer", "customer"],
     },
   },

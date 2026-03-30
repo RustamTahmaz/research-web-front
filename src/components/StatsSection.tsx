@@ -39,10 +39,11 @@ const StatsSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-primary-foreground mb-4">
-            Transforming Agricultural Trade in Azerbaijan
+            A marketplace model built for Azerbaijan's local food network
           </h2>
           <p className="text-primary-foreground/70 text-lg max-w-2xl mx-auto">
-            Join thousands of farmers and buyers who are already benefiting from direct trade
+            These headline numbers support the story behind the platform: direct requests, visible producers, and a
+            cleaner route from farm to customer.
           </p>
         </div>
 

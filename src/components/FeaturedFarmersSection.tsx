@@ -38,12 +38,12 @@ const FeaturedFarmersSection = () => {
   });
 
   return (
-    <section className="py-20 lg:py-28 bg-muted/30">
+    <section id="producers" className="py-20 lg:py-28 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
-            Our Farmers
+            Explore Producers
           </span>
           <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
             Meet Our <span className="text-primary">Featured Producers</span>

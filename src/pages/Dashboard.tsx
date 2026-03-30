@@ -56,6 +56,7 @@ const Dashboard = () => {
     quantity: "1",
     description: "",
   });
+  const [newProductImage, setNewProductImage] = useState<File | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editProduct, setEditProduct] = useState({
@@ -66,6 +67,7 @@ const Dashboard = () => {
     quantity: "",
     description: "",
   });
+  const [editProductImage, setEditProductImage] = useState<File | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -105,7 +107,40 @@ const Dashboard = () => {
 
   const isBusy = farmerLoading || productsLoading;
 
+  const { data: requestCounts } = useQuery({
+    queryKey: ["farmer-request-counts", farmer?.id],
+    queryFn: async () => {
+      if (!farmer) return { active: 0, history: 0 };
+      const { data, error } = await supabase
+        .from("order_requests")
+        .select("id, status, farmer_hidden")
+        .eq("farmer_id", farmer.id);
+      if (error || !data) return { active: 0, history: 0 };
+      const active = data.filter(
+        (r) =>
+          !r.farmer_hidden &&
+          ["pending", "approved", "countered", "confirmed"].includes(r.status)
+      ).length;
+      const history = data.filter(
+        (r) => r.farmer_hidden || ["declined", "fulfilled"].includes(r.status)
+      ).length;
+      return { active, history };
+    },
+    enabled: !!farmer?.id,
+  });
+
   const categoryOptions = useMemo(() => CATEGORY_OPTIONS, []);
+
+  const uploadProductImage = async (file: File, farmerId: string) => {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const filePath = `products/${farmerId}/${Date.now()}-${safeName}`;
+    const { error: uploadError } = await supabase.storage
+      .from("product-images")
+      .upload(filePath, file, { upsert: true });
+    if (uploadError) throw uploadError;
+    const { data } = supabase.storage.from("product-images").getPublicUrl(filePath);
+    return data.publicUrl;
+  };
 
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -132,6 +167,10 @@ const Dashboard = () => {
 
     setIsCreating(true);
     try {
+      let imageUrl: string | null = null;
+      if (newProductImage) {
+        imageUrl = await uploadProductImage(newProductImage, farmer.id);
+      }
       const { error } = await supabase.from("products").insert({
         farmer_id: farmer.id,
         name: newProduct.name.trim(),
@@ -140,6 +179,7 @@ const Dashboard = () => {
         unit: newProduct.unit.trim() || "kg",
         quantity_available: quantityValue,
         description: newProduct.description.trim() || null,
+        image_url: imageUrl,
         is_available: true,
       });
       if (error) throw error;
@@ -155,6 +195,7 @@ const Dashboard = () => {
         quantity: "1",
         description: "",
       });
+      setNewProductImage(null);
       await refetchProducts();
     } catch (error) {
       toast({
@@ -177,6 +218,7 @@ const Dashboard = () => {
       quantity: String(product.quantity_available),
       description: product.description || "",
     });
+    setEditProductImage(null);
   };
 
   const handleDelete = async (productId: string) => {
@@ -219,6 +261,10 @@ const Dashboard = () => {
     }
 
     try {
+      let imageUrl: string | null | undefined;
+      if (editProductImage && farmer) {
+        imageUrl = await uploadProductImage(editProductImage, farmer.id);
+      }
       const { error } = await supabase
         .from("products")
         .update({
@@ -227,6 +273,7 @@ const Dashboard = () => {
           unit: editProduct.unit.trim() || "kg",
           quantity_available: quantityValue,
           description: editProduct.description.trim() || null,
+          ...(imageUrl ? { image_url: imageUrl } : {}),
         })
         .eq("id", productId);
       if (error) throw error;
@@ -235,6 +282,7 @@ const Dashboard = () => {
         description: "Changes saved successfully.",
       });
       setEditingId(null);
+      setEditProductImage(null);
       await refetchProducts();
     } catch (error) {
       toast({
@@ -383,6 +431,15 @@ const Dashboard = () => {
                           placeholder="Short description (optional)"
                         />
                       </div>
+                      <div className="md:col-span-2 space-y-2">
+                        <Label htmlFor="newImage">Product image</Label>
+                        <Input
+                          id="newImage"
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => setNewProductImage(e.target.files?.[0] || null)}
+                        />
+                      </div>
                       <div className="md:col-span-2 flex justify-end">
                         <Button type="submit" disabled={isCreating}>
                           {isCreating ? "Creating..." : "Create Product"}
@@ -500,6 +557,14 @@ const Dashboard = () => {
                                       }
                                     />
                                   </div>
+                                  <div className="space-y-2">
+                                    <Label>Replace image</Label>
+                                    <Input
+                                      type="file"
+                                      accept="image/*"
+                                      onChange={(e) => setEditProductImage(e.target.files?.[0] || null)}
+                                    />
+                                  </div>
                                   <div className="flex justify-end gap-2">
                                     <Button
                                       variant="outline"
@@ -525,6 +590,7 @@ const Dashboard = () => {
                     )}
                   </CardContent>
                 </Card>
+
               </>
             )}
           </div>

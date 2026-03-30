@@ -4,81 +4,79 @@ const farmerBenefits = [
   {
     icon: CircleDollarSign,
     title: "Higher Profits",
-    description: "Sell directly without middlemen and keep up to 30% more of your earnings.",
+    description: "Sell directly without middlemen and keep more of each confirmed order.",
   },
   {
     icon: Users,
     title: "Wider Market Reach",
-    description: "Access thousands of urban buyers across Azerbaijan from your farm.",
+    description: "Reach urban buyers across Azerbaijan without building a separate sales channel.",
   },
   {
     icon: TrendingUp,
-    title: "Real-Time Analytics",
-    description: "Track your sales, popular products, and customer preferences with our dashboard.",
+    title: "Dashboard Visibility",
+    description: "Manage listings, requests, availability, and stock changes from one farmer dashboard.",
   },
   {
     icon: MessageCircle,
-    title: "Direct Communication",
-    description: "Chat directly with buyers to negotiate and build lasting relationships.",
+    title: "Negotiated Orders",
+    description: "Accept, decline, or counter customer requests before the final confirmation happens.",
   },
 ];
 
 const buyerBenefits = [
   {
     icon: Leaf,
-    title: "Farm-Fresh Quality",
-    description: "Get produce harvested within 24-48 hours, delivered fresh to your doorstep.",
+    title: "Fresh Produce",
+    description: "Find products directly from local farms instead of browsing through middlemen listings.",
   },
   {
     icon: ShieldCheck,
-    title: "Verified Farmers",
-    description: "Every farmer is verified. Know exactly where your food comes from.",
+    title: "Verified Producers",
+    description: "Buyer trust is stronger when farmer pages, history, and reviews are visible in one place.",
   },
   {
     icon: Clock,
-    title: "Convenient Shopping",
-    description: "Browse, order, and schedule deliveries that fit your lifestyle.",
+    title: "Flexible Flow",
+    description: "Customers can browse products, compare farmers, send requests, and confirm only when ready.",
   },
   {
     icon: Truck,
-    title: "Reliable Delivery",
-    description: "Track your orders in real-time with our trusted logistics partners.",
+    title: "Delivery Ready",
+    description: "The order flow is prepared for pickup or delivery planning as the transport milestone expands.",
   },
 ];
 
 const BenefitsSection = () => {
   return (
-    <section className="py-20 lg:py-28 bg-background overflow-hidden">
+    <section id="about" className="py-20 lg:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
+        <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
-            Why Choose Us
+            About FarmMarket
           </span>
           <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
-            Benefits for <span className="text-primary">Everyone</span>
+            Built for direct trade, not generic marketplace noise
           </h2>
           <p className="text-muted-foreground text-lg">
-            FarmMarket creates value for farmers and buyers alike, building a sustainable food ecosystem
+            FarmMarket connects buyers and producers through requests, negotiation, order tracking, and reviews, so
+            both sides can work in a more transparent way.
           </p>
         </div>
 
-        {/* Benefits Grid */}
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
-          {/* Farmer Benefits */}
           <div className="relative">
             <div className="absolute -top-10 -left-10 w-40 h-40 bg-primary/5 rounded-full blur-3xl" />
             <div className="relative bg-gradient-to-br from-primary/5 to-transparent rounded-3xl p-8 lg:p-10 border border-primary/10">
               <h3 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
-                <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  🌾
+                <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
+                  F
                 </span>
                 For Farmers
               </h3>
               <div className="grid sm:grid-cols-2 gap-6">
                 {farmerBenefits.map((benefit, index) => (
-                  <div 
-                    key={benefit.title} 
+                  <div
+                    key={benefit.title}
                     className="group animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -93,20 +91,19 @@ const BenefitsSection = () => {
             </div>
           </div>
 
-          {/* Buyer Benefits */}
           <div className="relative">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-secondary/10 rounded-full blur-3xl" />
             <div className="relative bg-gradient-to-br from-secondary/10 to-transparent rounded-3xl p-8 lg:p-10 border border-secondary/20">
               <h3 className="text-2xl font-bold text-foreground mb-8 flex items-center gap-3">
-                <span className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center">
-                  🛒
+                <span className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm font-semibold text-secondary">
+                  B
                 </span>
                 For Buyers
               </h3>
               <div className="grid sm:grid-cols-2 gap-6">
                 {buyerBenefits.map((benefit, index) => (
-                  <div 
-                    key={benefit.title} 
+                  <div
+                    key={benefit.title}
                     className="group animate-fade-in-up"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >

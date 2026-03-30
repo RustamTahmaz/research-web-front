@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -16,6 +16,7 @@ import Footer from "@/components/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, loading } = useAuth();
 
   const { data: profile } = useQuery({
@@ -39,16 +40,31 @@ const Index = () => {
     }
   }, [loading, user, profile, navigate]);
 
+  useEffect(() => {
+    if (!location.hash) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    const id = location.hash.replace("#", "");
+    const element = document.getElementById(id);
+    if (element) {
+      window.requestAnimationFrame(() => {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+  }, [location.hash]);
+
   return (
     <div className="min-h-screen">
       <Navbar />
       <main>
         <HeroSection />
         <CategoriesSection />
+        <FeaturedFarmersSection />
         <HowItWorksSection />
         <BenefitsSection />
         <StatsSection />
-        <FeaturedFarmersSection />
         <TestimonialsSection />
         <CTASection />
       </main>

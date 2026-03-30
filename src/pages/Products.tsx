@@ -1,5 +1,5 @@
 import { useNavigate, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -8,7 +8,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import { MapPin, Package } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { MapPin, Package, Star } from "lucide-react";
 
 interface ProductWithFarmer {
   id: string;
@@ -25,6 +26,42 @@ interface ProductWithFarmer {
     farm_location: string;
   } | null;
 }
+
+type RatingSummary = {
+  avg: number;
+  count: number;
+};
+
+type ReviewRow = {
+  product_id: string | null;
+  farmer_id: string;
+  product_rating: number | null;
+  farmer_rating: number | null;
+};
+
+const buildRatingMap = (
+  reviews: ReviewRow[],
+  key: "product_id" | "farmer_id",
+  ratingField: "product_rating" | "farmer_rating"
+) => {
+  const totals: Record<string, { sum: number; count: number }> = {};
+  for (const review of reviews) {
+    const id = review[key];
+    const rating = review[ratingField];
+    if (!id || rating === null) continue;
+    if (!totals[id]) totals[id] = { sum: 0, count: 0 };
+    totals[id].sum += rating;
+    totals[id].count += 1;
+  }
+  const summaries: Record<string, RatingSummary> = {};
+  for (const [id, value] of Object.entries(totals)) {
+    summaries[id] = {
+      avg: value.sum / value.count,
+      count: value.count,
+    };
+  }
+  return summaries;
+};
 
 const Products = () => {
   const navigate = useNavigate();
@@ -64,6 +101,70 @@ const Products = () => {
       if (error) throw error;
       return data as ProductWithFarmer[];
     },
+  });
+
+  const productIds = useMemo(() => products?.map((product) => product.id) ?? [], [products]);
+  const farmerIds = useMemo(
+    () =>
+      products
+        ?.map((product) => product.farmer_profiles?.id)
+        .filter((id): id is string => Boolean(id)) ?? [],
+    [products]
+  );
+
+  const { data: reviewRows } = useQuery({
+    queryKey: ["order-reviews-summary", productIds, farmerIds],
+    queryFn: async () => {
+      const filters: string[] = [];
+      if (productIds.length > 0) {
+        filters.push(`product_id.in.(${productIds.map((id) => `"${id}"`).join(",")})`);
+      }
+      if (farmerIds.length > 0) {
+        filters.push(`farmer_id.in.(${farmerIds.map((id) => `"${id}"`).join(",")})`);
+      }
+
+      if (filters.length === 0) return [] as ReviewRow[];
+
+      const { data, error } = await supabase
+        .from("order_reviews")
+        .select("product_id, farmer_id, product_rating, farmer_rating")
+        .or(filters.join(","));
+
+      if (error) throw error;
+      return (data ?? []) as ReviewRow[];
+    },
+    enabled: productIds.length > 0 || farmerIds.length > 0,
+  });
+
+  const productRatings = useMemo(
+    () => buildRatingMap(reviewRows ?? [], "product_id", "product_rating"),
+    [reviewRows]
+  );
+  const farmerRatings = useMemo(
+    () => buildRatingMap(reviewRows ?? [], "farmer_id", "farmer_rating"),
+    [reviewRows]
+  );
+
+  const { data: requestCounts } = useQuery({
+    queryKey: ["my-requests-counts", user?.id],
+    queryFn: async () => {
+      if (!user) return { active: 0, history: 0 };
+      const { data, error } = await supabase
+        .from("order_requests")
+        .select("id, status, customer_hidden")
+        .eq("customer_id", user.id);
+      if (error || !data) return { active: 0, history: 0 };
+      const active = data.filter(
+        (r) =>
+          !r.customer_hidden &&
+          ["pending", "approved", "countered", "confirmed"].includes(r.status)
+      ).length;
+      const history = data.filter(
+        (r) => r.customer_hidden || ["declined", "fulfilled"].includes(r.status)
+      ).length;
+      return { active, history };
+    },
+    enabled: !!user,
   });
 
   return (
@@ -122,12 +223,45 @@ const Products = () => {
                 {products.map((product) => (
                   <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-all duration-300">
                     <div className="h-36 bg-gradient-to-br from-muted to-muted/40 flex items-center justify-center">
-                      <Package className="w-10 h-10 text-muted-foreground" />
+                      {product.image_url ? (
+                        <img
+                          src={product.image_url}
+                          alt={product.name}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <Package className="w-10 h-10 text-muted-foreground" />
+                      )}
                     </div>
                     <CardContent className="p-6 space-y-4">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-foreground">{product.name}</h3>
                         <Badge variant="outline">{product.category}</Badge>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        {productRatings[product.id] ? (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                            <span className="font-medium text-foreground">
+                              {productRatings[product.id].avg.toFixed(1)}
+                            </span>
+                            <span>({productRatings[product.id].count})</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">No product ratings yet</span>
+                        )}
+                        {product.farmer_profiles && farmerRatings[product.farmer_profiles.id] ? (
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                            <span className="font-medium text-foreground">
+                              {farmerRatings[product.farmer_profiles.id].avg.toFixed(1)}
+                            </span>
+                            <span>farmer</span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">No farmer ratings yet</span>
+                        )}
                       </div>
                       {product.description && (
                         <p className="text-sm text-muted-foreground line-clamp-2">{product.description}</p>
@@ -138,9 +272,12 @@ const Products = () => {
                       </div>
                       {product.farmer_profiles && (
                         <div className="pt-3 border-t border-border">
-                          <p className="text-sm font-medium text-foreground">
+                          <Link
+                            to={`/farmer/${product.farmer_profiles.id}`}
+                            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                          >
                             {product.farmer_profiles.farm_name}
-                          </p>
+                          </Link>
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <MapPin className="w-3 h-3" />
                             <span>{product.farmer_profiles.farm_location}</span>

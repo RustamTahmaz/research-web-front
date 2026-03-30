@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Menu, X, Leaf, User, ShoppingCart, LogOut } from "lucide-react";
@@ -11,6 +11,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
   const { data: profile } = useQuery({
@@ -29,6 +30,34 @@ const Navbar = () => {
   });
 
   const isFarmer = profile?.role === "farmer";
+  const landingHref = (hash?: string) => {
+    const target = hash ? `/#${hash}` : "/";
+    if (location.pathname === "/" && hash) {
+      return `#${hash}`;
+    }
+    return target;
+  };
+
+  const { data: pendingCount } = useQuery({
+    queryKey: ["pending-requests-count", profile?.role, user?.id],
+    queryFn: async () => {
+      if (!user || profile?.role !== "farmer") return 0;
+      const { data, error } = await supabase
+        .from("order_requests")
+        .select("id")
+        .eq("status", "pending")
+        .eq("farmer_hidden", false)
+        .in("farmer_id", (
+          await supabase
+            .from("farmer_profiles")
+            .select("id")
+            .eq("user_id", user.id)
+        ).data?.map((row) => row.id) || []);
+      if (error) return 0;
+      return data?.length || 0;
+    },
+    enabled: !!user && profile?.role === "farmer",
+  });
 
   const navLinks = isFarmer
     ? [
@@ -37,10 +66,11 @@ const Navbar = () => {
         { name: "Products", href: "/products", isRoute: true },
       ]
     : [
-        { name: "Home", href: "#", isRoute: false },
-        { name: "Browse Products", href: "#products", isRoute: false },
-        { name: "How It Works", href: "#how-it-works", isRoute: false },
-        { name: "About", href: "#about", isRoute: false },
+        { name: "Home", href: landingHref(), isRoute: true },
+        { name: "Products", href: landingHref("products"), isRoute: false },
+        { name: "Explore Producers", href: landingHref("producers"), isRoute: false },
+        { name: "How It Works", href: landingHref("how-it-works"), isRoute: false },
+        { name: "About", href: landingHref("about"), isRoute: false },
       ];
 
   const handleSignOut = async () => {
@@ -74,9 +104,14 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200"
+                  className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors duration-200 relative"
                 >
                   {link.name}
+                  {"badge" in link && link.badge > 0 && (
+                    <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                      {link.badge}
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <a
@@ -92,9 +127,17 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="icon" className="text-muted-foreground">
-              <ShoppingCart className="w-5 h-5" />
-            </Button>
+            <Link to="/requests">
+              <Button variant="ghost" className="text-muted-foreground gap-2">
+                <ShoppingCart className="w-5 h-5" />
+                Requests
+                {pendingCount ? (
+                  <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                    {pendingCount}
+                  </span>
+                ) : null}
+              </Button>
+            </Link>
             
             {user ? (
               <Button variant="outline" className="gap-2" onClick={handleSignOut}>
@@ -139,7 +182,14 @@ const Navbar = () => {
                     className="px-4 py-3 text-sm font-medium text-foreground hover:bg-muted rounded-lg transition-colors"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {link.name}
+                    <span className="flex items-center justify-between">
+                      {link.name}
+                      {"badge" in link && link.badge > 0 && (
+                        <span className="ml-3 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
+                          {link.badge}
+                        </span>
+                      )}
+                    </span>
                   </Link>
                 ) : (
                   <a

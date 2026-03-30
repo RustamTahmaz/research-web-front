@@ -1,5 +1,5 @@
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
-import { Package, MapPin, User } from "lucide-react";
+import { Package, MapPin, User, Star } from "lucide-react";
 
 interface ProductWithFarmer {
   id: string;
@@ -34,6 +34,34 @@ interface FarmerProductCount {
   productCount: number;
   products: ProductWithFarmer[];
 }
+
+type RatingSummary = {
+  avg: number;
+  count: number;
+};
+
+type ReviewRow = {
+  farmer_id: string;
+  farmer_rating: number | null;
+};
+
+const buildFarmerRatingMap = (reviews: ReviewRow[]) => {
+  const totals: Record<string, { sum: number; count: number }> = {};
+  for (const review of reviews) {
+    if (review.farmer_rating === null) continue;
+    if (!totals[review.farmer_id]) totals[review.farmer_id] = { sum: 0, count: 0 };
+    totals[review.farmer_id].sum += review.farmer_rating;
+    totals[review.farmer_id].count += 1;
+  }
+  const summaries: Record<string, RatingSummary> = {};
+  for (const [id, value] of Object.entries(totals)) {
+    summaries[id] = {
+      avg: value.sum / value.count,
+      count: value.count,
+    };
+  }
+  return summaries;
+};
 
 const Farmers = () => {
   const navigate = useNavigate();
@@ -117,6 +145,28 @@ const Farmers = () => {
 
   const showFarmersFallback = category === "All" && farmerProductCounts.length === 0;
   const hasCategory = category !== "All";
+  const farmerIds = useMemo(() => {
+    const ids = new Set<string>();
+    farmerProductCounts.forEach((farmer) => ids.add(farmer.farmerId));
+    farmersList?.forEach((farmer) => ids.add(farmer.id));
+    return Array.from(ids);
+  }, [farmerProductCounts, farmersList]);
+
+  const { data: reviewRows } = useQuery({
+    queryKey: ["farmer-reviews-summary", farmerIds],
+    queryFn: async () => {
+      if (farmerIds.length === 0) return [] as ReviewRow[];
+      const { data, error } = await supabase
+        .from("order_reviews")
+        .select("farmer_id, farmer_rating")
+        .in("farmer_id", farmerIds);
+      if (error) throw error;
+      return (data ?? []) as ReviewRow[];
+    },
+    enabled: farmerIds.length > 0,
+  });
+
+  const farmerRatings = useMemo(() => buildFarmerRatingMap(reviewRows ?? []), [reviewRows]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -191,6 +241,19 @@ const Farmers = () => {
                             <MapPin className="w-4 h-4" />
                             <span className="text-sm">{farmer.farm_location}</span>
                           </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                            {farmerRatings[farmer.id] ? (
+                              <>
+                                <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                                <span className="font-medium text-foreground">
+                                  {farmerRatings[farmer.id].avg.toFixed(1)}
+                                </span>
+                                <span>({farmerRatings[farmer.id].count})</span>
+                              </>
+                            ) : (
+                              <span>No ratings yet</span>
+                            )}
+                          </div>
                           <span className="text-sm text-primary font-medium group-hover:underline">
                             View Farmer {"->"}
                           </span>
@@ -218,6 +281,19 @@ const Farmers = () => {
                         <div className="flex items-center gap-2 text-muted-foreground mb-4">
                           <MapPin className="w-4 h-4" />
                           <span className="text-sm">{farmer.farmLocation}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
+                          {farmerRatings[farmer.farmerId] ? (
+                            <>
+                              <Star className="w-3.5 h-3.5 text-yellow-500 fill-yellow-500" />
+                              <span className="font-medium text-foreground">
+                                {farmerRatings[farmer.farmerId].avg.toFixed(1)}
+                              </span>
+                              <span>({farmerRatings[farmer.farmerId].count})</span>
+                            </>
+                          ) : (
+                            <span>No ratings yet</span>
+                          )}
                         </div>
                         <div className="flex items-center justify-between">
                           <Badge variant="outline" className="bg-primary/5">
