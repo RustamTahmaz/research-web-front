@@ -1,6 +1,30 @@
 import { CircleDollarSign, ShieldCheck, Truck, Users, Leaf, TrendingUp, Clock, MessageCircle } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
-const farmerBenefits = [
+const farmerBenefits = {
+  az: [
+    {
+      icon: CircleDollarSign,
+      title: "Daha yüksək gəlir",
+      description: "Vasitəçilər olmadan birbaşa satış edib hər təsdiqlənmiş sifarişdən daha çox gəlir əldə edin.",
+    },
+    {
+      icon: Users,
+      title: "Daha geniş bazar",
+      description: "Ayrı satış kanalı qurulmadan Azərbaycanın şəhər alıcılarına çıxış əldə edin.",
+    },
+    {
+      icon: TrendingUp,
+      title: "İdarə panelində nəzarət",
+      description: "Elanları, sorğuları, mövcudluğu və stok dəyişikliklərini bir paneldən idarə edin.",
+    },
+    {
+      icon: MessageCircle,
+      title: "Razılaşdırılmış sifarişlər",
+      description: "Son təsdiqdən əvvəl müştəri sorğularını qəbul edin, rədd edin və ya qarşı təklif verin.",
+    },
+  ],
+  en: [
   {
     icon: CircleDollarSign,
     title: "Higher Profits",
@@ -21,9 +45,33 @@ const farmerBenefits = [
     title: "Negotiated Orders",
     description: "Accept, decline, or counter customer requests before the final confirmation happens.",
   },
-];
+  ],
+};
 
-const buyerBenefits = [
+const buyerBenefits = {
+  az: [
+    {
+      icon: Leaf,
+      title: "Təzə məhsul",
+      description: "Məhsulları vasitəçilərin siyahılarından deyil, birbaşa yerli fermalardan tapın.",
+    },
+    {
+      icon: ShieldCheck,
+      title: "Təsdiqlənmiş istehsalçılar",
+      description: "Fermer səhifələri, tarixçə və rəylər bir yerdə olduqda alıcı etibarı artır.",
+    },
+    {
+      icon: Clock,
+      title: "Çevik proses",
+      description: "Müştərilər məhsulları müqayisə edib sorğu göndərə və hazır olduqda təsdiq edə bilirlər.",
+    },
+    {
+      icon: Truck,
+      title: "Çatdırılmaya hazır",
+      description: "Sifariş prosesi götürmə və ya çatdırılma planlaması üçün ilkin olaraq hazırlanıb.",
+    },
+  ],
+  en: [
   {
     icon: Leaf,
     title: "Fresh Produce",
@@ -44,22 +92,26 @@ const buyerBenefits = [
     title: "Delivery Ready",
     description: "The order flow is prepared for pickup or delivery planning as the transport milestone expands.",
   },
-];
+  ],
+};
 
 const BenefitsSection = () => {
+  const { language } = useLanguage();
+  const isAz = language === "az";
   return (
     <section id="about" className="py-20 lg:py-28 bg-background overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
-            About FarmMarket
+            {isAz ? "FarmMarket haqqında" : "About FarmMarket"}
           </span>
           <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
-            Built for direct trade, not generic marketplace noise
+            {isAz ? "Ümumi marketplace qarışıqlığı üçün deyil, birbaşa ticarət üçün qurulub" : "Built for direct trade, not generic marketplace noise"}
           </h2>
           <p className="text-muted-foreground text-lg">
-            FarmMarket connects buyers and producers through requests, negotiation, order tracking, and reviews, so
-            both sides can work in a more transparent way.
+            {isAz
+              ? "FarmMarket alıcıları və istehsalçıları sorğular, razılaşma, sifariş izlənməsi və rəylər vasitəsilə birləşdirir ki, hər iki tərəf daha şəffaf işləsin."
+              : "FarmMarket connects buyers and producers through requests, negotiation, order tracking, and reviews, so both sides can work in a more transparent way."}
           </p>
         </div>
 
@@ -71,10 +123,10 @@ const BenefitsSection = () => {
                 <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-semibold text-primary">
                   F
                 </span>
-                For Farmers
+                {isAz ? "Fermerlər üçün" : "For Farmers"}
               </h3>
               <div className="grid sm:grid-cols-2 gap-6">
-                {farmerBenefits.map((benefit, index) => (
+                {farmerBenefits[language].map((benefit, index) => (
                   <div
                     key={benefit.title}
                     className="group animate-fade-in-up"
@@ -98,10 +150,10 @@ const BenefitsSection = () => {
                 <span className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center text-sm font-semibold text-secondary">
                   B
                 </span>
-                For Buyers
+                {isAz ? "Alıcılar üçün" : "For Buyers"}
               </h3>
               <div className="grid sm:grid-cols-2 gap-6">
-                {buyerBenefits.map((benefit, index) => (
+                {buyerBenefits[language].map((benefit, index) => (
                   <div
                     key={benefit.title}
                     className="group animate-fade-in-up"

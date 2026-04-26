@@ -10,6 +10,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { MapPin, Package, Star } from "lucide-react";
+import { getCategoryLabel } from "@/lib/categories";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 interface ProductWithFarmer {
   id: string;
@@ -66,6 +68,8 @@ const buildRatingMap = (
 const Products = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { language } = useLanguage();
+  const isAz = language === "az";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -176,13 +180,13 @@ const Products = () => {
             {/* Header */}
             <div className="text-center max-w-2xl mx-auto mb-12">
               <Badge variant="secondary" className="mb-4">
-                All Products
+                {isAz ? "Bütün məhsullar" : "All Products"}
               </Badge>
               <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
-                All Products from Local Farmers
+                {isAz ? "Yerli fermerlərdən bütün məhsullar" : "All Products from Local Farmers"}
               </h1>
               <p className="text-muted-foreground text-lg">
-                Browse every available product in the marketplace.
+                {isAz ? "Marketplace-də olan bütün mövcud məhsullara baxın." : "Browse every available product in the marketplace."}
               </p>
             </div>
 
@@ -206,13 +210,13 @@ const Products = () => {
               <div className="text-center py-20">
                 <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                 <h2 className="text-2xl font-semibold text-foreground mb-2">
-                  No products available yet
+                  {isAz ? "Hələlik məhsul yoxdur" : "No products available yet"}
                 </h2>
                 <p className="text-muted-foreground mb-6">
-                  Products will appear here once farmers list them.
+                  {isAz ? "Fermerlər məhsul əlavə etdikdən sonra burada görünəcək." : "Products will appear here once farmers list them."}
                 </p>
                 <Link to="/farmers">
-                  <span className="text-primary font-medium hover:underline">View Farmers {"->"}</span>
+                  <span className="text-primary font-medium hover:underline">{isAz ? "Fermerlərə bax" : "View Farmers"} {"->"}</span>
                 </Link>
               </div>
             )}
@@ -237,7 +241,7 @@ const Products = () => {
                     <CardContent className="p-6 space-y-4">
                       <div className="flex items-start justify-between gap-2">
                         <h3 className="font-semibold text-foreground">{product.name}</h3>
-                        <Badge variant="outline">{product.category}</Badge>
+                        <Badge variant="outline">{getCategoryLabel(product.category, language)}</Badge>
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         {productRatings[product.id] ? (
@@ -249,7 +253,7 @@ const Products = () => {
                             <span>({productRatings[product.id].count})</span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">No product ratings yet</span>
+                          <span className="text-muted-foreground">{isAz ? "Hələ məhsul reytinqi yoxdur" : "No product ratings yet"}</span>
                         )}
                         {product.farmer_profiles && farmerRatings[product.farmer_profiles.id] ? (
                           <div className="flex items-center gap-1 text-muted-foreground">
@@ -257,10 +261,10 @@ const Products = () => {
                             <span className="font-medium text-foreground">
                               {farmerRatings[product.farmer_profiles.id].avg.toFixed(1)}
                             </span>
-                            <span>farmer</span>
+                            <span>{isAz ? "fermer" : "farmer"}</span>
                           </div>
                         ) : (
-                          <span className="text-muted-foreground">No farmer ratings yet</span>
+                          <span className="text-muted-foreground">{isAz ? "Hələ fermer reytinqi yoxdur" : "No farmer ratings yet"}</span>
                         )}
                       </div>
                       {product.description && (

@@ -1,6 +1,34 @@
 import { TrendingUp, Users, Package, MapPin } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
-const stats = [
+const stats = {
+  az: [
+    {
+      icon: Users,
+      value: "5,000+",
+      label: "Aktiv fermer",
+      description: "Azərbaycan üzrə təsdiqlənmiş satıcılar",
+    },
+    {
+      icon: Package,
+      value: "50,000+",
+      label: "Yerləşdirilən məhsullar",
+      description: "Hər gün təzə məhsullar",
+    },
+    {
+      icon: TrendingUp,
+      value: "85%",
+      label: "Fermer məmnuniyyəti",
+      description: "Gəlirin artdığını bildirir",
+    },
+    {
+      icon: MapPin,
+      value: "60+",
+      label: "Əhatə olunan region",
+      description: "Azərbaycan üzrə çatdırılma imkanları",
+    },
+  ],
+  en: [
   {
     icon: Users,
     value: "5,000+",
@@ -25,9 +53,12 @@ const stats = [
     label: "Regions Covered",
     description: "Delivering across Azerbaijan",
   },
-];
+  ],
+};
 
 const StatsSection = () => {
+  const { language } = useLanguage();
+  const isAz = language === "az";
   return (
     <section className="py-20 lg:py-24 bg-primary relative overflow-hidden">
       {/* Background Pattern */}
@@ -39,16 +70,17 @@ const StatsSection = () => {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl lg:text-4xl font-bold text-primary-foreground mb-4">
-            A marketplace model built for Azerbaijan's local food network
+            {isAz ? "Azərbaycanın yerli ərzaq şəbəkəsi üçün qurulmuş marketplace modeli" : "A marketplace model built for Azerbaijan's local food network"}
           </h2>
           <p className="text-primary-foreground/70 text-lg max-w-2xl mx-auto">
-            These headline numbers support the story behind the platform: direct requests, visible producers, and a
-            cleaner route from farm to customer.
+            {isAz
+              ? "Bu əsas göstəricilər platformanın arxasındakı ideyanı dəstəkləyir: birbaşa sorğular, görünən istehsalçılar və fermadan müştəriyə daha təmiz yol."
+              : "These headline numbers support the story behind the platform: direct requests, visible producers, and a cleaner route from farm to customer."}
           </p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-          {stats.map((stat, index) => (
+          {stats[language].map((stat, index) => (
             <div 
               key={stat.label}
               className="text-center p-6 lg:p-8 rounded-2xl bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/10 animate-fade-in-up"

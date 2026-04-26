@@ -2,11 +2,14 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const CTASection = () => {
   const { user } = useAuth();
   const role = user?.user_metadata?.role;
   const browseHref = !user ? "/auth?mode=login" : role === "customer" ? "/products" : "/dashboard";
+  const { language } = useLanguage();
+  const isAz = language === "az";
 
   return (
     <section className="py-20 lg:py-28 bg-background">
@@ -20,17 +23,18 @@ const CTASection = () => {
             {/* Content */}
             <div>
               <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-primary-foreground mb-6">
-                Ready to Join Azerbaijan's Largest Farm Marketplace?
+                {isAz ? "Azərbaycanın ən böyük fermer marketplace-ə qoşulmağa hazırsınız?" : "Ready to Join Azerbaijan's Largest Farm Marketplace?"}
               </h2>
               <p className="text-lg text-primary-foreground/80 mb-8">
-                Whether you're a farmer looking to expand your reach or a buyer seeking fresh, quality produce - 
-                FarmMarket connects you directly. No middlemen, fair prices, farm-fresh quality.
+                {isAz
+                  ? "İstər satışını genişləndirmək istəyən fermer, istərsə də təzə və keyfiyyətli məhsul axtaran alıcı olun, FarmMarket sizi birbaşa birləşdirir. Vasitəçi yoxdur, qiymətlər ədalətlidir."
+                  : "Whether you're a farmer looking to expand your reach or a buyer seeking fresh, quality produce - FarmMarket connects you directly. No middlemen, fair prices, farm-fresh quality."}
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link to={browseHref}>
                   <Button variant="heroGolden" size="xl" className="group">
                     <ShoppingCart className="w-5 h-5" />
-                    Start Shopping
+                    {isAz ? "Alış-verişə başla" : "Start Shopping"}
                     <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                   </Button>
                 </Link>
@@ -41,23 +45,23 @@ const CTASection = () => {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20">
                 <p className="text-4xl font-bold text-secondary mb-2">0%</p>
-                <p className="text-primary-foreground/90 font-medium">Commission Fee</p>
-                <p className="text-sm text-primary-foreground/60 mt-1">For the first 3 months</p>
+                <p className="text-primary-foreground/90 font-medium">{isAz ? "Komissiya haqqı" : "Commission Fee"}</p>
+                <p className="text-sm text-primary-foreground/60 mt-1">{isAz ? "İlk 3 ay üçün" : "For the first 3 months"}</p>
               </div>
               <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20">
                 <p className="text-4xl font-bold text-secondary mb-2">24/7</p>
-                <p className="text-primary-foreground/90 font-medium">Support Available</p>
-                <p className="text-sm text-primary-foreground/60 mt-1">In Azerbaijani & Russian</p>
+                <p className="text-primary-foreground/90 font-medium">{isAz ? "Dəstək xidməti" : "Support Available"}</p>
+                <p className="text-sm text-primary-foreground/60 mt-1">{isAz ? "Azərbaycan və rus dillərində" : "In Azerbaijani & Russian"}</p>
               </div>
               <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20">
-                <p className="text-4xl font-bold text-secondary mb-2">Free</p>
-                <p className="text-primary-foreground/90 font-medium">Farmer Training</p>
-                <p className="text-sm text-primary-foreground/60 mt-1">Digital literacy courses</p>
+                <p className="text-4xl font-bold text-secondary mb-2">{isAz ? "Pulsuz" : "Free"}</p>
+                <p className="text-primary-foreground/90 font-medium">{isAz ? "Fermer təlimi" : "Farmer Training"}</p>
+                <p className="text-sm text-primary-foreground/60 mt-1">{isAz ? "Rəqəmsal savadlılıq dərsləri" : "Digital literacy courses"}</p>
               </div>
               <div className="bg-primary-foreground/10 backdrop-blur-sm rounded-2xl p-6 border border-primary-foreground/20">
-                <p className="text-4xl font-bold text-secondary mb-2">Fast</p>
-                <p className="text-primary-foreground/90 font-medium">Payouts</p>
-                <p className="text-sm text-primary-foreground/60 mt-1">Within 48 hours</p>
+                <p className="text-4xl font-bold text-secondary mb-2">{isAz ? "Sürətli" : "Fast"}</p>
+                <p className="text-primary-foreground/90 font-medium">{isAz ? "Ödənişlər" : "Payouts"}</p>
+                <p className="text-sm text-primary-foreground/60 mt-1">{isAz ? "48 saat ərzində" : "Within 48 hours"}</p>
               </div>
             </div>
           </div>

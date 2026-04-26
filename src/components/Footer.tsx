@@ -1,32 +1,35 @@
 import { Leaf, Facebook, Instagram, Youtube, Mail, Phone, MapPin } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { language } = useLanguage();
+  const isAz = language === "az";
 
   const footerLinks = {
     marketplace: [
-      { name: "Browse Products", href: "#" },
-      { name: "Categories", href: "#" },
-      { name: "Featured Farmers", href: "#" },
-      { name: "Special Offers", href: "#" },
+      { name: isAz ? "Məhsullara bax" : "Browse Products", href: "#" },
+      { name: isAz ? "Kateqoriyalar" : "Categories", href: "#" },
+      { name: isAz ? "Seçilmiş fermerlər" : "Featured Farmers", href: "#" },
+      { name: isAz ? "Xüsusi təkliflər" : "Special Offers", href: "#" },
     ],
     farmers: [
-      { name: "Start Selling", href: "#" },
-      { name: "Seller Dashboard", href: "#" },
-      { name: "Pricing", href: "#" },
-      { name: "Success Stories", href: "#" },
+      { name: isAz ? "Satışa başla" : "Start Selling", href: "#" },
+      { name: isAz ? "Satıcı paneli" : "Seller Dashboard", href: "#" },
+      { name: isAz ? "Qiymətləndirmə" : "Pricing", href: "#" },
+      { name: isAz ? "Uğur hekayələri" : "Success Stories", href: "#" },
     ],
     support: [
-      { name: "Help Center", href: "#" },
-      { name: "Contact Us", href: "#" },
-      { name: "FAQs", href: "#" },
-      { name: "Delivery Info", href: "#" },
+      { name: isAz ? "Yardım mərkəzi" : "Help Center", href: "#" },
+      { name: isAz ? "Əlaqə" : "Contact Us", href: "#" },
+      { name: isAz ? "Tez-tez verilən suallar" : "FAQs", href: "#" },
+      { name: isAz ? "Çatdırılma məlumatı" : "Delivery Info", href: "#" },
     ],
     company: [
-      { name: "About Us", href: "#" },
-      { name: "Blog", href: "#" },
-      { name: "Careers", href: "#" },
-      { name: "Press", href: "#" },
+      { name: isAz ? "Haqqımızda" : "About Us", href: "#" },
+      { name: isAz ? "Bloq" : "Blog", href: "#" },
+      { name: isAz ? "Karyera" : "Careers", href: "#" },
+      { name: isAz ? "Mətbuat" : "Press", href: "#" },
     ],
   };
 
@@ -47,8 +50,9 @@ const Footer = () => {
               </div>
             </a>
             <p className="text-primary-foreground/70 text-sm mb-6 max-w-xs">
-              Connecting Azerbaijan's smallholder farmers directly with buyers. 
-              Fresh produce, fair prices, sustainable agriculture.
+              {isAz
+                ? "Azərbaycanın kiçik fermerlərini alıcılarla birbaşa birləşdiririk. Təzə məhsul, ədalətli qiymət və dayanıqlı kənd təsərrüfatı."
+                : "Connecting Azerbaijan's smallholder farmers directly with buyers. Fresh produce, fair prices, sustainable agriculture."}
             </p>
             <div className="flex gap-3">
               <a href="#" className="w-10 h-10 rounded-full bg-primary-foreground/10 hover:bg-primary flex items-center justify-center transition-colors">
@@ -65,7 +69,7 @@ const Footer = () => {
 
           {/* Link Columns */}
           <div>
-            <h4 className="font-semibold mb-4">Marketplace</h4>
+            <h4 className="font-semibold mb-4">{isAz ? "Marketplace" : "Marketplace"}</h4>
             <ul className="space-y-2">
               {footerLinks.marketplace.map((link) => (
                 <li key={link.name}>
@@ -78,7 +82,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">For Farmers</h4>
+            <h4 className="font-semibold mb-4">{isAz ? "Fermerlər üçün" : "For Farmers"}</h4>
             <ul className="space-y-2">
               {footerLinks.farmers.map((link) => (
                 <li key={link.name}>
@@ -91,7 +95,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Support</h4>
+            <h4 className="font-semibold mb-4">{isAz ? "Dəstək" : "Support"}</h4>
             <ul className="space-y-2">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
@@ -104,7 +108,7 @@ const Footer = () => {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-4">Company</h4>
+            <h4 className="font-semibold mb-4">{isAz ? "Şirkət" : "Company"}</h4>
             <ul className="space-y-2">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
@@ -135,11 +139,11 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 pt-8 border-t border-primary-foreground/10 text-sm text-primary-foreground/60">
-          <p>&copy; {currentYear} FarmMarket Azerbaijan. All rights reserved.</p>
+          <p>&copy; {currentYear} FarmMarket Azerbaijan. {isAz ? "Bütün hüquqlar qorunur." : "All rights reserved."}</p>
           <div className="flex gap-6">
-            <a href="#" className="hover:text-primary-foreground transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-primary-foreground transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-primary-foreground transition-colors">Cookie Policy</a>
+            <a href="#" className="hover:text-primary-foreground transition-colors">{isAz ? "Məxfilik siyasəti" : "Privacy Policy"}</a>
+            <a href="#" className="hover:text-primary-foreground transition-colors">{isAz ? "İstifadə şərtləri" : "Terms of Service"}</a>
+            <a href="#" className="hover:text-primary-foreground transition-colors">{isAz ? "Cookie siyasəti" : "Cookie Policy"}</a>
           </div>
         </div>
       </div>

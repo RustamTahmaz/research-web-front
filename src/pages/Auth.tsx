@@ -8,21 +8,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Leaf, Tractor, ShoppingBag, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type UserRole = "farmer" | "customer";
 type AuthMode = "login" | "register";
 
 // Validation schemas
-const emailSchema = z.string().trim().email("Please enter a valid email address").max(255, "Email is too long");
-const passwordSchema = z.string().min(6, "Password must be at least 6 characters").max(100, "Password is too long");
-const nameSchema = z.string().trim().min(2, "Name must be at least 2 characters").max(100, "Name is too long");
-const phoneSchema = z.string().trim().max(20, "Phone number is too long").optional();
+const emailSchema = z.string().trim().email("Düzgün e-poçt ünvanı daxil edin").max(255, "E-poçt çox uzundur");
+const passwordSchema = z.string().min(6, "Şifrə ən azı 6 simvol olmalıdır").max(100, "Şifrə çox uzundur");
+const nameSchema = z.string().trim().min(2, "Ad ən azı 2 simvol olmalıdır").max(100, "Ad çox uzundur");
+const phoneSchema = z.string().trim().max(20, "Telefon nömrəsi çox uzundur").optional();
 
 const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { signIn, signUp, user, loading } = useAuth();
   const { toast } = useToast();
+  const { language, setLanguage } = useLanguage();
+  const isAz = language === "az";
   
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
@@ -99,7 +102,7 @@ const Auth = () => {
     const validationError = validateForm();
     if (validationError) {
       toast({
-        title: "Validation Error",
+        title: isAz ? "Yoxlama xətası" : "Validation Error",
         description: validationError,
         variant: "destructive",
       });
@@ -113,16 +116,16 @@ const Auth = () => {
         const { error } = await signIn(email, password);
         if (error) {
           toast({
-            title: "Login Failed",
+            title: isAz ? "Giriş alınmadı" : "Login Failed",
             description: error.message === "Invalid login credentials" 
-              ? "Invalid email or password. Please try again."
+              ? isAz ? "E-poçt və ya şifrə yanlışdır. Yenidən cəhd edin." : "Invalid email or password. Please try again."
               : error.message,
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Welcome back!",
-            description: "You have successfully signed in.",
+            title: isAz ? "Xoş gəlmisiniz" : "Welcome back!",
+            description: isAz ? "Uğurla daxil oldunuz." : "You have successfully signed in.",
           });
           const { data } = await supabase.auth.getUser();
           const role = data.user?.user_metadata?.role;
@@ -131,8 +134,8 @@ const Auth = () => {
       } else {
         if (!selectedRole) {
           toast({
-            title: "Select Account Type",
-            description: "Please select whether you're a farmer or customer.",
+            title: isAz ? "Hesab növünü seçin" : "Select Account Type",
+            description: isAz ? "Fermer və ya müştəri olduğunuzu seçin." : "Please select whether you're a farmer or customer.",
             variant: "destructive",
           });
           setIsSubmitting(false);
@@ -152,17 +155,17 @@ const Auth = () => {
 
         if (error) {
           const errorMessage = error.message.includes("already registered")
-            ? "This email is already registered. Please sign in instead."
+            ? isAz ? "Bu e-poçt artıq qeydiyyatdan keçib. Zəhmət olmasa daxil olun." : "This email is already registered. Please sign in instead."
             : error.message;
           toast({
-            title: "Registration Failed",
+            title: isAz ? "Qeydiyyat alınmadı" : "Registration Failed",
             description: errorMessage,
             variant: "destructive",
           });
         } else {
           toast({
-            title: "Account Created!",
-            description: "Welcome to FarmMarket Azerbaijan!",
+            title: isAz ? "Hesab yaradıldı" : "Account Created!",
+            description: isAz ? "FarmMarket Azerbaijan-a xoş gəlmisiniz!" : "Welcome to FarmMarket Azerbaijan!",
           });
           const { data } = await supabase.auth.getUser();
           const role = data.user?.user_metadata?.role;
@@ -171,8 +174,8 @@ const Auth = () => {
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: isAz ? "Xəta" : "Error",
+        description: isAz ? "Gözlənilməz xəta baş verdi. Yenidən cəhd edin." : "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -196,7 +199,7 @@ const Auth = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-pulse text-primary">Loading...</div>
+        <div className="animate-pulse text-primary">{isAz ? "Yüklənir..." : "Loading..."}</div>
       </div>
     );
   }
@@ -204,6 +207,10 @@ const Auth = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex items-center justify-center p-4">
       <div className="w-full max-w-md">
+        <div className="flex justify-end mb-4 gap-2">
+          <Button size="sm" variant={isAz ? "default" : "outline"} onClick={() => setLanguage("az")}>AZ</Button>
+          <Button size="sm" variant={!isAz ? "default" : "outline"} onClick={() => setLanguage("en")}>EN</Button>
+        </div>
         {/* Header */}
         <div className="text-center mb-8">
           <a href="/" className="inline-flex items-center gap-2 mb-6 group">
@@ -216,12 +223,12 @@ const Auth = () => {
             </div>
           </a>
           <h1 className="text-2xl font-bold text-foreground">
-            {authMode === "login" ? "Welcome Back" : "Create Account"}
+            {authMode === "login" ? (isAz ? "Yenidən xoş gəlmisiniz" : "Welcome Back") : (isAz ? "Hesab yaradın" : "Create Account")}
           </h1>
           <p className="text-muted-foreground mt-2">
             {authMode === "login" 
-              ? "Sign in to access your account" 
-              : "Join the fresh produce marketplace"}
+              ? (isAz ? "Hesabınıza daxil olun" : "Sign in to access your account")
+              : (isAz ? "Təzə məhsul marketplace-ə qoşulun" : "Join the fresh produce marketplace")}
           </p>
         </div>
 
@@ -231,7 +238,7 @@ const Auth = () => {
           {authMode === "register" && !selectedRole && (
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-center text-foreground mb-6">
-                I want to join as a...
+                {isAz ? "Mən qoşulmaq istəyirəm..." : "I want to join as a..."}
               </h2>
               
               <button
@@ -243,8 +250,8 @@ const Auth = () => {
                     <Tractor className="w-7 h-7 text-primary" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-foreground text-lg">Farmer</h3>
-                    <p className="text-sm text-muted-foreground">Sell your fresh produce directly to customers</p>
+                    <h3 className="font-semibold text-foreground text-lg">{isAz ? "Fermer" : "Farmer"}</h3>
+                    <p className="text-sm text-muted-foreground">{isAz ? "Təzə məhsullarınızı müştərilərə birbaşa satın" : "Sell your fresh produce directly to customers"}</p>
                   </div>
                 </div>
               </button>
@@ -258,8 +265,8 @@ const Auth = () => {
                     <ShoppingBag className="w-7 h-7 text-accent" />
                   </div>
                   <div className="text-left">
-                    <h3 className="font-semibold text-foreground text-lg">Customer</h3>
-                    <p className="text-sm text-muted-foreground">Buy fresh products directly from local farmers</p>
+                    <h3 className="font-semibold text-foreground text-lg">{isAz ? "Müştəri" : "Customer"}</h3>
+                    <p className="text-sm text-muted-foreground">{isAz ? "Təzə məhsulları yerli fermerlərdən birbaşa alın" : "Buy fresh products directly from local farmers"}</p>
                   </div>
                 </div>
               </button>
@@ -269,7 +276,7 @@ const Auth = () => {
                   onClick={() => setAuthMode("login")}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Already have an account? <span className="font-semibold">Sign in</span>
+                  {isAz ? <>Artıq hesabınız var? <span className="font-semibold">Daxil olun</span></> : <>Already have an account? <span className="font-semibold">Sign in</span></>}
                 </button>
               </div>
             </div>
@@ -284,7 +291,7 @@ const Auth = () => {
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to role selection
+                {isAz ? "Rol seçiminə qayıt" : "Back to role selection"}
               </button>
 
               <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/10 mb-4">
@@ -294,19 +301,21 @@ const Auth = () => {
                   <ShoppingBag className="w-5 h-5 text-accent" />
                 )}
                 <span className="text-sm font-medium text-foreground">
-                  Registering as {selectedRole === "farmer" ? "Farmer" : "Customer"}
+                  {isAz
+                    ? `Qeydiyyat növü: ${selectedRole === "farmer" ? "Fermer" : "Müştəri"}`
+                    : `Registering as ${selectedRole === "farmer" ? "Farmer" : "Customer"}`}
                 </span>
               </div>
 
               {/* Common Fields */}
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name *</Label>
+                <Label htmlFor="fullName">{isAz ? "Ad və soyad *" : "Full Name *"}</Label>
                 <Input
                   id="fullName"
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your full name"
+                  placeholder={isAz ? "Ad və soyadınızı daxil edin" : "Enter your full name"}
                   required
                 />
               </div>
@@ -318,13 +327,13 @@ const Auth = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
+                  placeholder={isAz ? "E-poçtunuzu daxil edin" : "Enter your email"}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone">{isAz ? "Telefon nömrəsi" : "Phone Number"}</Label>
                 <Input
                   id="phone"
                   type="tel"
@@ -335,14 +344,14 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password *</Label>
+                <Label htmlFor="password">{isAz ? "Şifrə *" : "Password *"}</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Create a password (min 6 characters)"
+                    placeholder={isAz ? "Şifrə yaradın (ən azı 6 simvol)" : "Create a password (min 6 characters)"}
                     required
                   />
                   <button
@@ -359,23 +368,23 @@ const Auth = () => {
               {selectedRole === "farmer" && (
                 <>
                   <div className="pt-4 border-t border-border">
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Farm Information</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">{isAz ? "Fermer məlumatları" : "Farm Information"}</h3>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="farmName">Farm Name *</Label>
+                    <Label htmlFor="farmName">{isAz ? "Təsərrüfat adı *" : "Farm Name *"}</Label>
                     <Input
                       id="farmName"
                       type="text"
                       value={farmName}
                       onChange={(e) => setFarmName(e.target.value)}
-                      placeholder="Enter your farm name"
+                      placeholder={isAz ? "Təsərrüfat adını daxil edin" : "Enter your farm name"}
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="farmLocation">Farm Location *</Label>
+                    <Label htmlFor="farmLocation">{isAz ? "Təsərrüfat yeri *" : "Farm Location *"}</Label>
                     <Input
                       id="farmLocation"
                       type="text"
@@ -387,13 +396,13 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="farmSize">Farm Size (hectares)</Label>
+                    <Label htmlFor="farmSize">{isAz ? "Təsərrüfat ölçüsü (hektar)" : "Farm Size (hectares)"}</Label>
                     <Input
                       id="farmSize"
                       type="text"
                       value={farmSize}
                       onChange={(e) => setFarmSize(e.target.value)}
-                      placeholder="e.g., 5 hectares"
+                      placeholder={isAz ? "məs., 5 hektar" : "e.g., 5 hectares"}
                     />
                   </div>
                 </>
@@ -403,11 +412,11 @@ const Auth = () => {
               {selectedRole === "customer" && (
                 <>
                   <div className="pt-4 border-t border-border">
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Delivery Information (Optional)</h3>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">{isAz ? "Çatdırılma məlumatı (istəyə bağlı)" : "Delivery Information (Optional)"}</h3>
                   </div>
                   
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">{isAz ? "Şəhər" : "City"}</Label>
                     <Input
                       id="city"
                       type="text"
@@ -418,20 +427,20 @@ const Auth = () => {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="deliveryAddress">Delivery Address</Label>
+                    <Label htmlFor="deliveryAddress">{isAz ? "Çatdırılma ünvanı" : "Delivery Address"}</Label>
                     <Input
                       id="deliveryAddress"
                       type="text"
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
-                      placeholder="Enter your delivery address"
+                      placeholder={isAz ? "Ünvanı daxil edin" : "Enter your delivery address"}
                     />
                   </div>
                 </>
               )}
 
               <Button type="submit" className="w-full mt-6" disabled={isSubmitting}>
-                {isSubmitting ? "Creating Account..." : "Create Account"}
+                {isSubmitting ? (isAz ? "Hesab yaradılır..." : "Creating Account...") : (isAz ? "Hesab yarat" : "Create Account")}
               </Button>
 
               <div className="text-center pt-4">
@@ -443,7 +452,7 @@ const Auth = () => {
                   }}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Already have an account? <span className="font-semibold">Sign in</span>
+                  {isAz ? <>Artıq hesabınız var? <span className="font-semibold">Daxil olun</span></> : <>Already have an account? <span className="font-semibold">Sign in</span></>}
                 </button>
               </div>
             </form>
@@ -465,14 +474,14 @@ const Auth = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="loginPassword">Password</Label>
+                <Label htmlFor="loginPassword">{isAz ? "Şifrə" : "Password"}</Label>
                 <div className="relative">
                   <Input
                     id="loginPassword"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder={isAz ? "Şifrənizi daxil edin" : "Enter your password"}
                     required
                   />
                   <button
@@ -486,7 +495,7 @@ const Auth = () => {
               </div>
 
               <Button type="submit" className="w-full mt-6" disabled={isSubmitting}>
-                {isSubmitting ? "Signing in..." : "Sign In"}
+                {isSubmitting ? (isAz ? "Daxil olunur..." : "Signing in...") : (isAz ? "Daxil ol" : "Sign In")}
               </Button>
 
               <div className="text-center pt-4">
@@ -498,7 +507,7 @@ const Auth = () => {
                   }}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
-                  Don't have an account? <span className="font-semibold">Create one</span>
+                  {isAz ? <>Hesabınız yoxdur? <span className="font-semibold">Yaradın</span></> : <>Don't have an account? <span className="font-semibold">Create one</span></>}
                 </button>
               </div>
             </form>
@@ -512,7 +521,7 @@ const Auth = () => {
             className="text-sm text-muted-foreground hover:text-primary transition-colors inline-flex items-center gap-2"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Home
+            {isAz ? "Ana səhifəyə qayıt" : "Back to Home"}
           </a>
         </div>
       </div>

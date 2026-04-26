@@ -11,8 +11,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { DELIVERY_PROVIDER_LABELS, estimateDeliveryFee } from "@/lib/delivery";
+import { estimateDeliveryFee, getDeliveryProviderLabel } from "@/lib/delivery";
 import { isTransportSchemaError, withTransportDefaults } from "@/lib/orderRequests";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type RequestStatus = "pending" | "approved" | "declined" | "confirmed" | "fulfilled" | "countered";
 type DeliveryMethod = "pickup" | "third_party";
@@ -45,6 +46,8 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const isAz = language === "az";
   const [isPaying, setIsPaying] = useState(false);
   const [transportAvailable, setTransportAvailable] = useState(true);
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>("pickup");
@@ -160,16 +163,16 @@ const Checkout = () => {
     if (transportAvailable && deliveryMethod === "third_party") {
       if (!deliveryAddress.trim()) {
         toast({
-          title: "Delivery address required",
-          description: "Please add a delivery address for third-party transport.",
+          title: isAz ? "Çatdırılma ünvanı tələb olunur" : "Delivery address required",
+          description: isAz ? "Üçüncü tərəf çatdırılması üçün ünvan daxil edin." : "Please add a delivery address for third-party transport.",
           variant: "destructive",
         });
         return;
       }
       if (!Number.isFinite(parsedDistance) || parsedDistance <= 0) {
         toast({
-          title: "Distance required",
-          description: "Please enter an estimated delivery distance.",
+          title: isAz ? "Məsafə tələb olunur" : "Distance required",
+          description: isAz ? "Təxmini çatdırılma məsafəsini daxil edin." : "Please enter an estimated delivery distance.",
           variant: "destructive",
         });
         return;
@@ -177,8 +180,8 @@ const Checkout = () => {
     }
     if (transportAvailable && deliveryScheduleType === "scheduled" && !deliveryScheduledFor) {
       toast({
-        title: "Schedule required",
-        description: "Please choose a delivery or pickup time.",
+        title: isAz ? "Vaxt tələb olunur" : "Schedule required",
+        description: isAz ? "Çatdırılma və ya götürülmə vaxtını seçin." : "Please choose a delivery or pickup time.",
         variant: "destructive",
       });
       return;
@@ -208,8 +211,8 @@ const Checkout = () => {
       if (updateError) {
         setIsPaying(false);
         toast({
-          title: "Transport setup failed",
-          description: "Please try again.",
+          title: isAz ? "Çatdırılma məlumatı saxlanmadı" : "Transport setup failed",
+          description: isAz ? "Yenidən cəhd edin." : "Please try again.",
           variant: "destructive",
         });
         return;
@@ -220,15 +223,15 @@ const Checkout = () => {
     setIsPaying(false);
     if (error) {
       toast({
-        title: "Payment failed",
-        description: "Please try again.",
+        title: isAz ? "Ödəniş alınmadı" : "Payment failed",
+        description: isAz ? "Yenidən cəhd edin." : "Please try again.",
         variant: "destructive",
       });
       return;
     }
     toast({
-      title: "Payment successful",
-      description: "Your order is confirmed.",
+      title: isAz ? "Ödəniş uğurlu oldu" : "Payment successful",
+      description: isAz ? "Sifarişiniz təsdiqləndi." : "Your order is confirmed.",
     });
     navigate("/requests");
   };
@@ -240,12 +243,12 @@ const Checkout = () => {
         <section className="py-12 lg:py-20">
           <div className="container mx-auto px-4">
             <div className="max-w-xl mx-auto">
-              <h1 className="text-3xl font-bold text-foreground mb-6">Checkout</h1>
+              <h1 className="text-3xl font-bold text-foreground mb-6">{isAz ? "Ödəniş" : "Checkout"}</h1>
               <Card>
                 <CardContent className="p-6 space-y-4">
-                  {isLoading && <div className="text-muted-foreground">Loading...</div>}
+                  {isLoading && <div className="text-muted-foreground">{isAz ? "Yüklənir..." : "Loading..."}</div>}
                   {!isLoading && !request && (
-                    <div className="text-muted-foreground">Request not found.</div>
+                    <div className="text-muted-foreground">{isAz ? "Sorğu tapılmadı." : "Request not found."}</div>
                   )}
                   {!isLoading && request && (
                     <>
@@ -259,22 +262,26 @@ const Checkout = () => {
                         <Badge variant="secondary">{request.status}</Badge>
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Quantity:{" "}
+                        {isAz ? "Miqdar" : "Quantity"}:{" "}
                         {request.status === "countered" && request.counter_quantity
                           ? request.counter_quantity
                           : request.requested_quantity}{" "}
                         {request.products?.unit}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Unit price: AZN {request.products?.price}
+                        {isAz ? "Vahid qiymət" : "Unit price"}: AZN {request.products?.price}
                       </div>
                       <div className="space-y-4 rounded-2xl border border-border bg-muted/30 p-4">
                         <div>
-                          <p className="font-semibold text-foreground">Transport Plan</p>
+                          <p className="font-semibold text-foreground">{isAz ? "Çatdırılma planı" : "Transport Plan"}</p>
                           <p className="text-sm text-muted-foreground">
                             {transportAvailable
-                              ? "Choose how the order should move after confirmation."
-                              : "Transport fields are hidden until the new delivery migration is applied in Supabase."}
+                              ? isAz
+                                ? "Təsdiqdən sonra sifarişin necə hərəkət edəcəyini seçin."
+                                : "Choose how the order should move after confirmation."
+                              : isAz
+                                ? "Yeni çatdırılma miqrasiyası Supabase-də tətbiq olunana qədər çatdırılma sahələri gizlədilib."
+                                : "Transport fields are hidden until the new delivery migration is applied in Supabase."}
                           </p>
                         </div>
 
@@ -290,9 +297,11 @@ const Checkout = () => {
                                     : "border-border bg-background"
                                 }`}
                               >
-                                <p className="font-medium text-foreground">Customer Pickup</p>
+                                <p className="font-medium text-foreground">{isAz ? "Müştəri götürməsi" : "Customer Pickup"}</p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  No delivery fee. Customer checks and collects directly.
+                                  {isAz
+                                    ? "Çatdırılma haqqı yoxdur. Müştəri məhsulu birbaşa yoxlayıb götürür."
+                                    : "No delivery fee. Customer checks and collects directly."}
                                 </p>
                               </button>
                               <button
@@ -304,9 +313,11 @@ const Checkout = () => {
                                     : "border-border bg-background"
                                 }`}
                               >
-                                <p className="font-medium text-foreground">Third-Party Delivery</p>
+                                <p className="font-medium text-foreground">{isAz ? "Üçüncü tərəf çatdırılması" : "Third-Party Delivery"}</p>
                                 <p className="text-sm text-muted-foreground mt-1">
-                                  Unified flow for farmer delivery, companies, or local carriers.
+                                  {isAz
+                                    ? "Fermer, şirkət və ya yerli daşıyıcı üçün vahid axın."
+                                    : "Unified flow for farmer delivery, companies, or local carriers."}
                                 </p>
                               </button>
                             </div>
@@ -325,14 +336,14 @@ const Checkout = () => {
                                           : "border-border text-muted-foreground"
                                       }`}
                                     >
-                                      {DELIVERY_PROVIDER_LABELS[provider]}
+                                      {getDeliveryProviderLabel(provider, language)}
                                     </button>
                                   ))}
                                 </div>
                                 <Input
                                   value={deliveryAddress}
                                   onChange={(e) => setDeliveryAddress(e.target.value)}
-                                  placeholder="Delivery address"
+                                  placeholder={isAz ? "Çatdırılma ünvanı" : "Delivery address"}
                                 />
                                 <Input
                                   type="number"
@@ -340,7 +351,7 @@ const Checkout = () => {
                                   step="0.5"
                                   value={deliveryDistanceKm}
                                   onChange={(e) => setDeliveryDistanceKm(e.target.value)}
-                                  placeholder="Estimated distance in km"
+                                  placeholder={isAz ? "Təxmini məsafə (km)" : "Estimated distance in km"}
                                 />
                               </div>
                             )}
@@ -358,7 +369,9 @@ const Checkout = () => {
                                         : "border-border text-muted-foreground"
                                     }`}
                                   >
-                                    {schedule === "asap" ? "As Soon As Possible" : "Schedule Time"}
+                                    {schedule === "asap"
+                                      ? isAz ? "Mümkün qədər tez" : "As Soon As Possible"
+                                      : isAz ? "Vaxt planlaşdır" : "Schedule Time"}
                                   </button>
                                 ))}
                               </div>
@@ -372,27 +385,27 @@ const Checkout = () => {
                               <Textarea
                                 value={deliveryNotes}
                                 onChange={(e) => setDeliveryNotes(e.target.value)}
-                                placeholder="Optional transport notes, pickup instruction, or contact detail"
+                                placeholder={isAz ? "Əlavə çatdırılma qeydi, götürülmə təlimatı və ya əlaqə məlumatı" : "Optional transport notes, pickup instruction, or contact detail"}
                               />
                             </div>
                           </>
                         )}
                       </div>
                       <div className="text-lg font-semibold text-foreground">
-                        Product total: AZN {productTotal.toFixed(2)}
+                        {isAz ? "Məhsul cəmi" : "Product total"}: AZN {productTotal.toFixed(2)}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        Delivery fee: AZN {deliveryFee.toFixed(2)}
+                        {isAz ? "Çatdırılma haqqı" : "Delivery fee"}: AZN {deliveryFee.toFixed(2)}
                       </div>
                       <div className="text-lg font-semibold text-foreground">
-                        Grand total: AZN {grandTotal.toFixed(2)}
+                        {isAz ? "Ümumi məbləğ" : "Grand total"}: AZN {grandTotal.toFixed(2)}
                       </div>
                       <div className="flex gap-2 pt-2">
                         <Button onClick={handlePay} disabled={isPaying || !["approved", "countered"].includes(request.status)}>
-                          {isPaying ? "Processing..." : "Pay (Test)"}
+                          {isPaying ? (isAz ? "Emal olunur..." : "Processing...") : (isAz ? "Ödə (test)" : "Pay (Test)")}
                         </Button>
                         <Link to="/requests">
-                          <Button variant="outline">Back</Button>
+                          <Button variant="outline">{isAz ? "Geri" : "Back"}</Button>
                         </Link>
                       </div>
                     </>

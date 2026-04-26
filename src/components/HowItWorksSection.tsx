@@ -2,8 +2,54 @@ import { Link } from "react-router-dom";
 import { Search, MessageSquareText, BadgeCheck, Truck, History, Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
-const journeySteps = [
+const journeySteps = {
+  az: [
+    {
+      icon: Search,
+      step: "01",
+      title: "Məhsullardan başlayın və ya fermerləri seçin",
+      description:
+        "Müştərilər bazara məhsullar bölməsindən daxil ola və ya əvvəlcə istehsalçı səhifələrinə baxaraq məkan, məhsul və reytinqləri müqayisə edə bilər.",
+    },
+    {
+      icon: MessageSquareText,
+      step: "02",
+      title: "Miqdar və qeyd ilə sorğu göndərin",
+      description:
+        "Birbaşa səbət yoxlaması əvəzinə müştəri fermerə lazım olan miqdar və qısa qeydlə sorğu göndərir.",
+    },
+    {
+      icon: BadgeCheck,
+      step: "03",
+      title: "Fermer təsdiqləyir və ya qarşı təklif verir",
+      description:
+        "Fermer sorğunu qəbul edə, rədd edə və ya qarşı təklif təqdim edə bilər. Hər iki tərəf bu prosesi Sorğular bölməsində izləyir.",
+    },
+    {
+      icon: Truck,
+      step: "04",
+      title: "Sifarişi təsdiqləyin və çatdırılmanı planlayın",
+      description:
+        "Təsdiqdən sonra müştəri ödənişi tamamlayır və sifariş götürmə və ya üçüncü tərəf çatdırılması mərhələsinə keçir.",
+    },
+    {
+      icon: History,
+      step: "05",
+      title: "Sorğular və tarixçədə izləyin",
+      description:
+        "Aktiv danışıqlar Sorğular bölməsində qalır, tamamlanmış və ya silinmiş sifarişlər isə Tarixçə bölməsinə keçir.",
+    },
+    {
+      icon: Star,
+      step: "06",
+      title: "Tamamlandıqdan sonra rəy bildirin",
+      description:
+        "Fermer sifarişi tamamlanmış kimi qeyd etdikdən sonra müştəri məhsulu Tarixçədən, fermeri isə istehsalçı səhifəsindən qiymətləndirə bilər.",
+    },
+  ],
+  en: [
   {
     icon: Search,
     step: "01",
@@ -46,11 +92,14 @@ const journeySteps = [
     description:
       "Once the farmer marks the order fulfilled, customers can review the product from History and leave a one-time farmer review from the producer page.",
   },
-];
+  ],
+};
 
 const HowItWorksSection = () => {
   const { user } = useAuth();
   const role = user?.user_metadata?.role;
+  const { language } = useLanguage();
+  const isAz = language === "az";
   const productsHref = !user ? "/auth?mode=login" : role === "customer" ? "/products" : "/dashboard";
   const farmersHref = !user ? "/auth?mode=login" : role === "customer" ? "/farmers" : "/dashboard";
 
@@ -63,34 +112,36 @@ const HowItWorksSection = () => {
         <div className="grid xl:grid-cols-[1.05fr_1.35fr] gap-10 items-start">
           <div className="xl:sticky xl:top-28">
             <span className="inline-block px-4 py-1.5 rounded-full bg-secondary/20 text-secondary-foreground text-sm font-semibold mb-4">
-              How It Works
+              {isAz ? "Necə işləyir" : "How It Works"}
             </span>
             <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-5">
-              A clearer buying flow from <span className="text-primary">discovery to delivery</span>
+              {isAz ? <>Kəşfdən <span className="text-primary">çatdırılmaya qədər daha aydın proses</span></> : <>A clearer buying flow from <span className="text-primary">discovery to delivery</span></>}
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-xl">
-              FarmMarket is built around direct farmer-customer requests. The flow is simple, but it gives both sides
-              room to agree on quantity, timing, and final confirmation before delivery.
+              {isAz
+                ? "FarmMarket birbaşa fermer-müştəri sorğuları üzərində qurulub. Proses sadədir, amma tərəflərə miqdar, vaxt və son təsdiq üzrə razılaşmaq imkanı verir."
+                : "FarmMarket is built around direct farmer-customer requests. The flow is simple, but it gives both sides room to agree on quantity, timing, and final confirmation before delivery."}
             </p>
 
             <div className="rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm p-6 shadow-soft space-y-4">
               <div>
-                <p className="text-sm font-semibold text-foreground">Practical way to use the platform</p>
+                <p className="text-sm font-semibold text-foreground">{isAz ? "Platformadan praktik istifadə qaydası" : "Practical way to use the platform"}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Start from products when you know what you need, or open producer pages first if you want to compare
-                  farms, trust signals, and available stock.
+                  {isAz
+                    ? "Nə istədiyinizi bilirsinizsə məhsullardan başlayın, yox əgər fermerləri, etibar siqnallarını və mövcud ehtiyatı müqayisə etmək istəyirsinizsə əvvəlcə istehsalçı səhifələrini açın."
+                    : "Start from products when you know what you need, or open producer pages first if you want to compare farms, trust signals, and available stock."}
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Link to={productsHref}>
                   <Button size="lg">
-                    Browse Products
+                    {isAz ? "Məhsullara bax" : "Browse Products"}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </Link>
                 <Link to={farmersHref}>
                   <Button variant="outline" size="lg">
-                    Explore Producers
+                    {isAz ? "İstehsalçıları araşdır" : "Explore Producers"}
                   </Button>
                 </Link>
               </div>
@@ -98,7 +149,7 @@ const HowItWorksSection = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
-            {journeySteps.map((step, index) => (
+            {journeySteps[language].map((step, index) => (
               <div
                 key={step.step}
                 className="group rounded-3xl border border-border/60 bg-card p-6 shadow-soft hover:shadow-medium hover:border-primary/20 transition-all duration-300 animate-fade-in-up"

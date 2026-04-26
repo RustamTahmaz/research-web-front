@@ -19,8 +19,9 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { CATEGORY_OPTIONS } from "@/lib/categories";
+import { CATEGORY_OPTIONS, getCategoryLabel } from "@/lib/categories";
 import { MapPin, Package, PlusCircle, Store, Trash2, Pencil } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 interface FarmerProfile {
   id: string;
@@ -46,6 +47,8 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const isAz = language === "az";
 
   const [isCreating, setIsCreating] = useState(false);
   const [newProduct, setNewProduct] = useState({
@@ -107,7 +110,7 @@ const Dashboard = () => {
 
   const isBusy = farmerLoading || productsLoading;
 
-  const { data: requestCounts } = useQuery({
+  useQuery({
     queryKey: ["farmer-request-counts", farmer?.id],
     queryFn: async () => {
       if (!farmer) return { active: 0, history: 0 };
@@ -148,8 +151,8 @@ const Dashboard = () => {
 
     if (!newProduct.name.trim() || !newProduct.category || !newProduct.price.trim()) {
       toast({
-        title: "Missing fields",
-        description: "Name, category, and price are required.",
+        title: isAz ? "Məlumat çatışmır" : "Missing fields",
+        description: isAz ? "Ad, kateqoriya və qiymət tələb olunur." : "Name, category, and price are required.",
         variant: "destructive",
       });
       return;
@@ -158,8 +161,8 @@ const Dashboard = () => {
     const quantityValue = Number(newProduct.quantity);
     if (!Number.isFinite(quantityValue) || quantityValue <= 0) {
       toast({
-        title: "Invalid quantity",
-        description: "Quantity must be at least 1.",
+        title: isAz ? "Yanlış miqdar" : "Invalid quantity",
+        description: isAz ? "Miqdar ən azı 1 olmalıdır." : "Quantity must be at least 1.",
         variant: "destructive",
       });
       return;
@@ -184,8 +187,8 @@ const Dashboard = () => {
       });
       if (error) throw error;
       toast({
-        title: "Product created",
-        description: "Your product is now visible on the marketplace.",
+        title: isAz ? "Məhsul yaradıldı" : "Product created",
+        description: isAz ? "Məhsulunuz artıq bazarda görünür." : "Your product is now visible on the marketplace.",
       });
       setNewProduct({
         name: "",
@@ -197,10 +200,10 @@ const Dashboard = () => {
       });
       setNewProductImage(null);
       await refetchProducts();
-    } catch (error) {
+    } catch {
       toast({
-        title: "Create failed",
-        description: "Please try again or check your permissions.",
+        title: isAz ? "Yaratmaq alınmadı" : "Create failed",
+        description: isAz ? "Yenidən cəhd edin və ya icazələri yoxlayın." : "Please try again or check your permissions.",
         variant: "destructive",
       });
     } finally {
@@ -226,14 +229,14 @@ const Dashboard = () => {
       const { error } = await supabase.from("products").delete().eq("id", productId);
       if (error) throw error;
       toast({
-        title: "Product removed",
-        description: "Your listing has been deleted.",
+        title: isAz ? "Məhsul silindi" : "Product removed",
+        description: isAz ? "Elanınız silindi." : "Your listing has been deleted.",
       });
       await refetchProducts();
-    } catch (error) {
+    } catch {
       toast({
-        title: "Delete failed",
-        description: "Please try again.",
+        title: isAz ? "Silmək alınmadı" : "Delete failed",
+        description: isAz ? "Yenidən cəhd edin." : "Please try again.",
         variant: "destructive",
       });
     }
@@ -243,8 +246,8 @@ const Dashboard = () => {
     const quantityValue = Number(editProduct.quantity);
     if (!Number.isFinite(quantityValue)) {
       toast({
-        title: "Invalid quantity",
-        description: "Quantity must be a number.",
+        title: isAz ? "Yanlış miqdar" : "Invalid quantity",
+        description: isAz ? "Miqdar rəqəm olmalıdır." : "Quantity must be a number.",
         variant: "destructive",
       });
       return;
@@ -254,8 +257,8 @@ const Dashboard = () => {
       await handleDelete(productId);
       setEditingId(null);
       toast({
-        title: "Out of stock",
-        description: "Product quantity is 0, listing removed.",
+        title: isAz ? "Stok bitib" : "Out of stock",
+        description: isAz ? "Miqdar 0 olduğu üçün elan silindi." : "Product quantity is 0, listing removed.",
       });
       return;
     }
@@ -278,16 +281,16 @@ const Dashboard = () => {
         .eq("id", productId);
       if (error) throw error;
       toast({
-        title: "Product updated",
-        description: "Changes saved successfully.",
+        title: isAz ? "Məhsul yeniləndi" : "Product updated",
+        description: isAz ? "Dəyişikliklər yadda saxlanıldı." : "Changes saved successfully.",
       });
       setEditingId(null);
       setEditProductImage(null);
       await refetchProducts();
-    } catch (error) {
+    } catch {
       toast({
-        title: "Update failed",
-        description: "Please try again.",
+        title: isAz ? "Yeniləmə alınmadı" : "Update failed",
+        description: isAz ? "Yenidən cəhd edin." : "Please try again.",
         variant: "destructive",
       });
     }
@@ -299,7 +302,7 @@ const Dashboard = () => {
         <Navbar />
         <main className="pt-20">
           <div className="container mx-auto px-4 py-12">
-            <div className="animate-pulse text-muted-foreground">Loading dashboard...</div>
+            <div className="animate-pulse text-muted-foreground">{isAz ? "Panel yüklənir..." : "Loading dashboard..."}</div>
           </div>
         </main>
         <Footer />
@@ -313,12 +316,12 @@ const Dashboard = () => {
         <Navbar />
         <main className="pt-20">
           <div className="container mx-auto px-4 py-12 text-center">
-            <h1 className="text-2xl font-semibold text-foreground mb-3">Farmer profile not found</h1>
+            <h1 className="text-2xl font-semibold text-foreground mb-3">{isAz ? "Fermer profili tapılmadı" : "Farmer profile not found"}</h1>
             <p className="text-muted-foreground mb-6">
-              This account is registered as a customer. You can still browse the marketplace.
+              {isAz ? "Bu hesab müştəri kimi qeydiyyatdan keçib. Yenə də bazara baxa bilərsiniz." : "This account is registered as a customer. You can still browse the marketplace."}
             </p>
             <Link to="/products">
-              <Button>View Marketplace</Button>
+              <Button>{isAz ? "Bazara bax" : "View Marketplace"}</Button>
             </Link>
           </div>
         </main>
@@ -349,7 +352,7 @@ const Dashboard = () => {
                       <div className="flex flex-wrap gap-2">
                         {farmer.farm_size && <Badge variant="secondary">{farmer.farm_size}</Badge>}
                         {farmer.years_of_experience && (
-                          <Badge variant="outline">{farmer.years_of_experience}+ years</Badge>
+                          <Badge variant="outline">{isAz ? `${farmer.years_of_experience}+ il` : `${farmer.years_of_experience}+ years`}</Badge>
                         )}
                       </div>
                     </div>
@@ -360,38 +363,38 @@ const Dashboard = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-4">
                       <PlusCircle className="w-5 h-5 text-primary" />
-                      <h2 className="text-xl font-semibold text-foreground">Add Product</h2>
+                      <h2 className="text-xl font-semibold text-foreground">{isAz ? "Məhsul əlavə et" : "Add Product"}</h2>
                     </div>
                     <form onSubmit={handleCreateProduct} className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label htmlFor="newName">Product name *</Label>
+                        <Label htmlFor="newName">{isAz ? "Məhsul adı *" : "Product name *"}</Label>
                         <Input
                           id="newName"
                           value={newProduct.name}
                           onChange={(e) => setNewProduct((prev) => ({ ...prev, name: e.target.value }))}
-                          placeholder="e.g., Fresh Tomatoes"
+                          placeholder={isAz ? "məs., Təzə pomidor" : "e.g., Fresh Tomatoes"}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="newCategory">Category *</Label>
+                        <Label htmlFor="newCategory">{isAz ? "Kateqoriya *" : "Category *"}</Label>
                         <Select
                           value={newProduct.category}
                           onValueChange={(value) => setNewProduct((prev) => ({ ...prev, category: value }))}
                         >
                           <SelectTrigger id="newCategory">
-                            <SelectValue placeholder="Select category" />
+                            <SelectValue placeholder={isAz ? "Kateqoriya seçin" : "Select category"} />
                           </SelectTrigger>
                           <SelectContent>
                             {categoryOptions.map((cat) => (
                               <SelectItem key={cat} value={cat}>
-                                {cat}
+                                {getCategoryLabel(cat, language)}
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="newPrice">Price (AZN) *</Label>
+                        <Label htmlFor="newPrice">{isAz ? "Qiymət (AZN) *" : "Price (AZN) *"}</Label>
                         <Input
                           id="newPrice"
                           type="number"
@@ -399,20 +402,20 @@ const Dashboard = () => {
                           step="0.01"
                           value={newProduct.price}
                           onChange={(e) => setNewProduct((prev) => ({ ...prev, price: e.target.value }))}
-                          placeholder="e.g., 2.50"
+                          placeholder="2.50"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="newUnit">Unit</Label>
+                        <Label htmlFor="newUnit">{isAz ? "Vahid" : "Unit"}</Label>
                         <Input
                           id="newUnit"
                           value={newProduct.unit}
                           onChange={(e) => setNewProduct((prev) => ({ ...prev, unit: e.target.value }))}
-                          placeholder="e.g., kg"
+                          placeholder={isAz ? "məs., kq" : "e.g., kg"}
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="newQty">Quantity available *</Label>
+                        <Label htmlFor="newQty">{isAz ? "Mövcud miqdar *" : "Quantity available *"}</Label>
                         <Input
                           id="newQty"
                           type="number"
@@ -423,16 +426,16 @@ const Dashboard = () => {
                         />
                       </div>
                       <div className="md:col-span-2 space-y-2">
-                        <Label htmlFor="newDesc">Description</Label>
+                        <Label htmlFor="newDesc">{isAz ? "Təsvir" : "Description"}</Label>
                         <Textarea
                           id="newDesc"
                           value={newProduct.description}
                           onChange={(e) => setNewProduct((prev) => ({ ...prev, description: e.target.value }))}
-                          placeholder="Short description (optional)"
+                          placeholder={isAz ? "Qısa təsvir (istəyə bağlı)" : "Short description (optional)"}
                         />
                       </div>
                       <div className="md:col-span-2 space-y-2">
-                        <Label htmlFor="newImage">Product image</Label>
+                        <Label htmlFor="newImage">{isAz ? "Məhsul şəkli" : "Product image"}</Label>
                         <Input
                           id="newImage"
                           type="file"
@@ -442,7 +445,7 @@ const Dashboard = () => {
                       </div>
                       <div className="md:col-span-2 flex justify-end">
                         <Button type="submit" disabled={isCreating}>
-                          {isCreating ? "Creating..." : "Create Product"}
+                          {isCreating ? (isAz ? "Yaradılır..." : "Creating...") : (isAz ? "Məhsulu yarat" : "Create Product")}
                         </Button>
                       </div>
                     </form>
@@ -453,7 +456,7 @@ const Dashboard = () => {
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-6">
                       <Package className="w-5 h-5 text-primary" />
-                      <h2 className="text-xl font-semibold text-foreground">Your Products</h2>
+                      <h2 className="text-xl font-semibold text-foreground">{isAz ? "Məhsullarınız" : "Your Products"}</h2>
                       <Badge variant="outline">{products?.length || 0}</Badge>
                     </div>
                     {products && products.length > 0 ? (
@@ -464,7 +467,7 @@ const Dashboard = () => {
                               <div className="flex items-start justify-between gap-4">
                                 <div>
                                   <h3 className="font-semibold text-foreground">{product.name}</h3>
-                                  <p className="text-sm text-muted-foreground">{product.category}</p>
+                                  <p className="text-sm text-muted-foreground">{getCategoryLabel(product.category, language)}</p>
                                 </div>
                                 <div className="flex gap-2">
                                   <Button
@@ -488,14 +491,14 @@ const Dashboard = () => {
                               )}
                               <div className="flex items-center justify-between text-sm text-muted-foreground">
                                 <span>AZN {product.price}/{product.unit}</span>
-                                <span>{product.quantity_available} {product.unit} available</span>
+                                <span>{product.quantity_available} {product.unit} {isAz ? "mövcuddur" : "available"}</span>
                               </div>
 
                               {editingId === product.id && (
                                 <div className="border-t border-border pt-4 space-y-3">
                                   <div className="grid gap-3 md:grid-cols-2">
                                     <div className="space-y-2">
-                                      <Label>Category</Label>
+                                      <Label>{isAz ? "Kateqoriya" : "Category"}</Label>
                                       <Select
                                         value={editProduct.category}
                                         onValueChange={(value) =>
@@ -503,19 +506,19 @@ const Dashboard = () => {
                                         }
                                       >
                                         <SelectTrigger>
-                                          <SelectValue placeholder="Select category" />
+                                          <SelectValue placeholder={isAz ? "Kateqoriya seçin" : "Select category"} />
                                         </SelectTrigger>
                                         <SelectContent>
                                           {categoryOptions.map((cat) => (
                                             <SelectItem key={cat} value={cat}>
-                                              {cat}
+                                              {getCategoryLabel(cat, language)}
                                             </SelectItem>
                                           ))}
                                         </SelectContent>
                                       </Select>
                                     </div>
                                     <div className="space-y-2">
-                                      <Label>Price (AZN)</Label>
+                                      <Label>{isAz ? "Qiymət (AZN)" : "Price (AZN)"}</Label>
                                       <Input
                                         type="number"
                                         min="0"
@@ -527,7 +530,7 @@ const Dashboard = () => {
                                       />
                                     </div>
                                     <div className="space-y-2">
-                                      <Label>Unit</Label>
+                                      <Label>{isAz ? "Vahid" : "Unit"}</Label>
                                       <Input
                                         value={editProduct.unit}
                                         onChange={(e) =>
@@ -536,7 +539,7 @@ const Dashboard = () => {
                                       />
                                     </div>
                                     <div className="space-y-2">
-                                      <Label>Quantity</Label>
+                                      <Label>{isAz ? "Miqdar" : "Quantity"}</Label>
                                       <Input
                                         type="number"
                                         min="0"
@@ -549,7 +552,7 @@ const Dashboard = () => {
                                     </div>
                                   </div>
                                   <div className="space-y-2">
-                                    <Label>Description</Label>
+                                    <Label>{isAz ? "Təsvir" : "Description"}</Label>
                                     <Textarea
                                       value={editProduct.description}
                                       onChange={(e) =>
@@ -558,7 +561,7 @@ const Dashboard = () => {
                                     />
                                   </div>
                                   <div className="space-y-2">
-                                    <Label>Replace image</Label>
+                                    <Label>{isAz ? "Şəkli dəyiş" : "Replace image"}</Label>
                                     <Input
                                       type="file"
                                       accept="image/*"
@@ -570,12 +573,12 @@ const Dashboard = () => {
                                       variant="outline"
                                       onClick={() => setEditingId(null)}
                                     >
-                                      Cancel
+                                      {isAz ? "Ləğv et" : "Cancel"}
                                     </Button>
-                                    <Button onClick={() => handleSave(product.id)}>Save</Button>
+                                    <Button onClick={() => handleSave(product.id)}>{isAz ? "Yadda saxla" : "Save"}</Button>
                                   </div>
                                   <p className="text-xs text-muted-foreground">
-                                    Set quantity to 0 to remove out-of-stock items.
+                                    {isAz ? "Stokda olmayan məhsulu silmək üçün miqdarı 0 edin." : "Set quantity to 0 to remove out-of-stock items."}
                                   </p>
                                 </div>
                               )}
@@ -585,12 +588,11 @@ const Dashboard = () => {
                       </div>
                     ) : (
                       <div className="text-center py-12 text-muted-foreground">
-                        You do not have any products yet. Add your first listing above.
+                        {isAz ? "Hələ məhsulunuz yoxdur. İlk elanınızı yuxarıda əlavə edin." : "You do not have any products yet. Add your first listing above."}
                       </div>
                     )}
                   </CardContent>
                 </Card>
-
               </>
             )}
           </div>

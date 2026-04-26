@@ -13,8 +13,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Star } from "lucide-react";
-import { DELIVERY_STATUS_LABELS, REFUND_STATUS_LABELS, formatDeliverySummary } from "@/lib/delivery";
+import { formatDeliverySummary, getDeliveryStatusLabel, getRefundStatusLabel } from "@/lib/delivery";
 import { isTransportSchemaError, withTransportDefaults } from "@/lib/orderRequests";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type RequestStatus = "pending" | "approved" | "declined" | "confirmed" | "fulfilled" | "countered";
 
@@ -98,6 +99,8 @@ const History = () => {
   const { user, loading } = useAuth();
   const role = user?.user_metadata?.role;
   const { toast } = useToast();
+  const { language } = useLanguage();
+  const isAz = language === "az";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -331,9 +334,7 @@ const History = () => {
       if (reviewRequestIds.length === 0) return [];
       const { data, error } = await supabase
         .from("order_reviews")
-        .select(
-          "id, order_request_id, product_rating, product_review_text"
-        )
+        .select("id, order_request_id, product_rating, product_review_text")
         .in("order_request_id", reviewRequestIds);
       if (error) throw error;
       return (data ?? []) as ReviewRow[];
@@ -367,16 +368,8 @@ const History = () => {
     if (!user || !activeRequest) return;
     if (!productRating) {
       toast({
-        title: "Product rating required",
-        description: "Please leave a product rating.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (productReviewText && !productRating) {
-      toast({
-        title: "Missing product rating",
-        description: "Product text requires a product rating.",
+        title: isAz ? "Məhsul reytinqi tələb olunur" : "Product rating required",
+        description: isAz ? "Zəhmət olmasa məhsul üçün reytinq verin." : "Please leave a product rating.",
         variant: "destructive",
       });
       return;
@@ -404,16 +397,16 @@ const History = () => {
     setIsSavingReview(false);
     if (error) {
       toast({
-        title: "Review failed",
-        description: "Please try again.",
+        title: isAz ? "Rəy göndərilmədi" : "Review failed",
+        description: isAz ? "Yenidən cəhd edin." : "Please try again.",
         variant: "destructive",
       });
       return;
     }
     await refetchReviews();
     toast({
-      title: existing ? "Review updated" : "Review submitted",
-      description: "Thanks for sharing your feedback.",
+      title: existing ? (isAz ? "Rəy yeniləndi" : "Review updated") : (isAz ? "Rəy göndərildi" : "Review submitted"),
+      description: isAz ? "Rəyiniz üçün təşəkkür edirik." : "Thanks for sharing your feedback.",
     });
     setReviewOpen(false);
   };
@@ -427,8 +420,8 @@ const History = () => {
     setIsDeleting(false);
     if (error) {
       toast({
-        title: "Delete failed",
-        description: "This history item could not be removed.",
+        title: isAz ? "Silmək alınmadı" : "Delete failed",
+        description: isAz ? "Bu tarixçə elementi silinə bilmədi." : "This history item could not be removed.",
         variant: "destructive",
       });
       return;
@@ -442,8 +435,8 @@ const History = () => {
     }
 
     toast({
-      title: "History deleted",
-      description: "The purchase record has been removed from history.",
+      title: isAz ? "Tarixçə silindi" : "History deleted",
+      description: isAz ? "Satınalma qeydi tarixçədən silindi." : "The purchase record has been removed from history.",
     });
     setDeleteTarget(null);
   };
@@ -457,15 +450,15 @@ const History = () => {
     if (error) {
       if (isTransportSchemaError(error)) {
         toast({
-          title: "Transport migration not applied",
-          description: "Apply the new delivery SQL first to use refund status.",
+          title: isAz ? "Çatdırılma miqrasiyası tətbiq olunmayıb" : "Transport migration not applied",
+          description: isAz ? "Geri ödəniş statusundan istifadə üçün əvvəlcə yeni SQL-i tətbiq edin." : "Apply the new delivery SQL first to use refund status.",
           variant: "destructive",
         });
         return;
       }
       toast({
-        title: "Refund request failed",
-        description: "Please try again.",
+        title: isAz ? "Geri ödəniş sorğusu alınmadı" : "Refund request failed",
+        description: isAz ? "Yenidən cəhd edin." : "Please try again.",
         variant: "destructive",
       });
       return;
@@ -473,8 +466,8 @@ const History = () => {
 
     await refetchCustomer();
     toast({
-      title: "Refund requested",
-      description: "The request is marked for refund review.",
+      title: isAz ? "Geri ödəniş istənildi" : "Refund requested",
+      description: isAz ? "Sorğu geri ödəniş üçün qeyd edildi." : "The request is marked for refund review.",
     });
   };
 
@@ -497,6 +490,18 @@ const History = () => {
     </div>
   );
 
+  const getStatusLabel = (status: RequestStatus) => {
+    if (!isAz) return status;
+    return {
+      pending: "gözləmədə",
+      approved: "təsdiqlənib",
+      declined: "rədd edilib",
+      confirmed: "ödəniş edilib",
+      fulfilled: "tamamlanıb",
+      countered: "əks təklif",
+    }[status];
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -504,9 +509,9 @@ const History = () => {
         <section className="py-12 lg:py-20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-foreground">Request History</h1>
+              <h1 className="text-3xl font-bold text-foreground">{isAz ? "Sorğu tarixçəsi" : "Request History"}</h1>
               <Link to="/requests">
-                <Button variant="outline">Back to Active</Button>
+                <Button variant="outline">{isAz ? "Aktiv sorğulara qayıt" : "Back to Active"}</Button>
               </Link>
             </div>
 
@@ -525,7 +530,7 @@ const History = () => {
                   </div>
                 )}
                 {!customerLoading && (!customerRequests || customerRequests.length === 0) && (
-                  <div className="text-muted-foreground">No history yet.</div>
+                  <div className="text-muted-foreground">{isAz ? "Hələ tarixçə yoxdur." : "No history yet."}</div>
                 )}
                 {!customerLoading && customerRequests && customerRequests.length > 0 && (
                   <div className="grid md:grid-cols-2 gap-4">
@@ -539,25 +544,27 @@ const History = () => {
                                 {request.products?.farmer_profiles?.farm_name}
                               </p>
                             </div>
-                            <Badge variant="secondary">{request.status}</Badge>
+                            <Badge variant="secondary">{getStatusLabel(request.status)}</Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {request.requested_quantity} {request.products?.unit}
                           </div>
                           {request.delivery_method && (
                             <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
-                              <p className="font-medium text-foreground">Transport</p>
-                              <p>{formatDeliverySummary(request)}</p>
+                              <p className="font-medium text-foreground">{isAz ? "Çatdırılma" : "Transport"}</p>
+                              <p>{formatDeliverySummary(request, language)}</p>
                               {request.delivery_status && (
-                                <p>Status: {DELIVERY_STATUS_LABELS[request.delivery_status]}</p>
+                                <p>{isAz ? "Status" : "Status"}: {getDeliveryStatusLabel(request.delivery_status, language)}</p>
                               )}
-                              <p>Refund: {REFUND_STATUS_LABELS[request.refund_status]}</p>
+                              <p>{isAz ? "Geri ödəniş" : "Refund"}: {getRefundStatusLabel(request.refund_status, language)}</p>
                             </div>
                           )}
                           {request.status === "fulfilled" && (
                             <div className="pt-2">
                               <Button size="sm" variant="outline" onClick={() => openReviewDialog(request)}>
-                                {reviewsByRequest[request.id] ? "Edit Product Review" : "Leave Product Review"}
+                                {reviewsByRequest[request.id]
+                                  ? isAz ? "Məhsul rəyini redaktə et" : "Edit Product Review"
+                                  : isAz ? "Məhsula rəy yaz" : "Leave Product Review"}
                               </Button>
                             </div>
                           )}
@@ -565,7 +572,7 @@ const History = () => {
                             request.delivery_status !== "delivered" &&
                             request.refund_status === "none" && (
                               <Button size="sm" variant="outline" onClick={() => handleRequestRefund(request.id)}>
-                                Request Refund
+                                {isAz ? "Geri ödəniş istə" : "Request Refund"}
                               </Button>
                             )}
                           <Button
@@ -575,11 +582,11 @@ const History = () => {
                               setDeleteTarget({
                                 id: request.id,
                                 role: "customer",
-                                label: request.products?.name ?? "this purchase",
+                                label: request.products?.name ?? (isAz ? "bu alış" : "this purchase"),
                               })
                             }
                           >
-                            Delete
+                            {isAz ? "Sil" : "Delete"}
                           </Button>
                         </CardContent>
                       </Card>
@@ -604,7 +611,7 @@ const History = () => {
                   </div>
                 )}
                 {!farmerLoading && (!farmerRequests || farmerRequests.length === 0) && (
-                  <div className="text-muted-foreground">No history yet.</div>
+                  <div className="text-muted-foreground">{isAz ? "Hələ tarixçə yoxdur." : "No history yet."}</div>
                 )}
                 {!farmerLoading && farmerRequests && farmerRequests.length > 0 && (
                   <div className="grid md:grid-cols-2 gap-4">
@@ -616,19 +623,19 @@ const History = () => {
                               <p className="font-semibold text-foreground">{request.products?.name}</p>
                               <p className="text-xs text-muted-foreground">{request.profiles?.full_name}</p>
                             </div>
-                            <Badge variant="secondary">{request.status}</Badge>
+                            <Badge variant="secondary">{getStatusLabel(request.status)}</Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {request.requested_quantity} {request.products?.unit}
                           </div>
                           {request.delivery_method && (
                             <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
-                              <p className="font-medium text-foreground">Transport</p>
-                              <p>{formatDeliverySummary(request)}</p>
+                              <p className="font-medium text-foreground">{isAz ? "Çatdırılma" : "Transport"}</p>
+                              <p>{formatDeliverySummary(request, language)}</p>
                               {request.delivery_status && (
-                                <p>Status: {DELIVERY_STATUS_LABELS[request.delivery_status]}</p>
+                                <p>{isAz ? "Status" : "Status"}: {getDeliveryStatusLabel(request.delivery_status, language)}</p>
                               )}
-                              <p>Refund: {REFUND_STATUS_LABELS[request.refund_status]}</p>
+                              <p>{isAz ? "Geri ödəniş" : "Refund"}: {getRefundStatusLabel(request.refund_status, language)}</p>
                             </div>
                           )}
                           <Button
@@ -638,11 +645,11 @@ const History = () => {
                               setDeleteTarget({
                                 id: request.id,
                                 role: "farmer",
-                                label: request.products?.name ?? "this request",
+                                label: request.products?.name ?? (isAz ? "bu sorğu" : "this request"),
                               })
                             }
                           >
-                            Delete
+                            {isAz ? "Sil" : "Delete"}
                           </Button>
                         </CardContent>
                       </Card>
@@ -658,28 +665,30 @@ const History = () => {
       <Dialog open={reviewOpen} onOpenChange={setReviewOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{reviewsByRequest[activeRequest?.id ?? ""] ? "Edit Review" : "Leave Review"}</DialogTitle>
+            <DialogTitle>{reviewsByRequest[activeRequest?.id ?? ""] ? (isAz ? "Rəyi redaktə et" : "Edit Review") : (isAz ? "Rəy yaz" : "Leave Review")}</DialogTitle>
             <DialogDescription>
-              Share your feedback for {activeRequest?.products?.name ?? "this order"}.
+              {isAz
+                ? `${activeRequest?.products?.name ?? "bu sifariş"} üçün rəyinizi paylaşın.`
+                : `Share your feedback for ${activeRequest?.products?.name ?? "this order"}.`}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-foreground">Product rating</p>
+              <p className="text-sm font-medium text-foreground">{isAz ? "Məhsul reytinqi" : "Product rating"}</p>
               {renderStars(productRating, setProductRating)}
               <Textarea
                 value={productReviewText}
                 onChange={(e) => setProductReviewText(e.target.value)}
-                placeholder="Product feedback (optional)"
+                placeholder={isAz ? "Məhsul haqqında rəy (istəyə bağlı)" : "Product feedback (optional)"}
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setReviewOpen(false)} disabled={isSavingReview}>
-              Cancel
+              {isAz ? "Ləğv et" : "Cancel"}
             </Button>
             <Button onClick={handleSaveReview} disabled={isSavingReview}>
-              {isSavingReview ? "Saving..." : "Submit Review"}
+              {isSavingReview ? (isAz ? "Yadda saxlanılır..." : "Saving...") : (isAz ? "Rəyi göndər" : "Submit Review")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -695,11 +704,15 @@ const History = () => {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Leave a farmer review?</DialogTitle>
+            <DialogTitle>{isAz ? "Fermer üçün rəy yazmaq istəyirsiniz?" : "Leave a farmer review?"}</DialogTitle>
             <DialogDescription>
               {promptTargetRequest?.products?.farmer_profiles?.farm_name
-                ? `Would you like to review ${promptTargetRequest.products.farmer_profiles.farm_name}?`
-                : "Would you like to leave a review for the farmer you purchased from?"}
+                ? isAz
+                  ? `${promptTargetRequest.products.farmer_profiles.farm_name} üçün rəy yazmaq istəyirsiniz?`
+                  : `Would you like to review ${promptTargetRequest.products.farmer_profiles.farm_name}?`
+                : isAz
+                  ? "Alış etdiyiniz fermer üçün rəy yazmaq istəyirsiniz?"
+                  : "Would you like to leave a review for the farmer you purchased from?"}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -709,7 +722,7 @@ const History = () => {
                 setFarmerPromptOpen(false);
               }}
             >
-              Not now
+              {isAz ? "İndi yox" : "Not now"}
             </Button>
             {promptTargetRequest && (
               <Button
@@ -718,7 +731,7 @@ const History = () => {
                   navigate(`/farmer/${promptTargetRequest.farmer_id}?review=1`);
                 }}
               >
-                Go to Farmer Page
+                {isAz ? "Fermer səhifəsinə keç" : "Go to Farmer Page"}
               </Button>
             )}
           </DialogFooter>
@@ -727,19 +740,23 @@ const History = () => {
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete this history item?</DialogTitle>
+            <DialogTitle>{isAz ? "Bu tarixçə elementini silinsin?" : "Delete this history item?"}</DialogTitle>
             <DialogDescription>
               {deleteTarget
-                ? `This will permanently remove ${deleteTarget.label} from your history. Reviews linked to this purchase will also be removed.`
-                : "This will permanently remove this history item."}
+                ? isAz
+                  ? `${deleteTarget.label} tarixçədən birdəfəlik silinəcək. Bu alışla bağlı rəylər də silinəcək.`
+                  : `This will permanently remove ${deleteTarget.label} from your history. Reviews linked to this purchase will also be removed.`
+                : isAz
+                  ? "Bu tarixçə elementi birdəfəlik silinəcək."
+                  : "This will permanently remove this history item."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteTarget(null)} disabled={isDeleting}>
-              Cancel
+              {isAz ? "Ləğv et" : "Cancel"}
             </Button>
             <Button variant="destructive" onClick={handleDeleteHistoryItem} disabled={isDeleting}>
-              {isDeleting ? "Deleting..." : "Delete"}
+              {isDeleting ? (isAz ? "Silinir..." : "Deleting...") : (isAz ? "Sil" : "Delete")}
             </Button>
           </DialogFooter>
         </DialogContent>

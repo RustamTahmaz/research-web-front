@@ -10,12 +10,13 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  DELIVERY_PROVIDER_LABELS,
-  DELIVERY_SCHEDULE_LABELS,
-  DELIVERY_STATUS_LABELS,
+  getDeliveryProviderLabel,
+  getDeliveryScheduleLabel,
+  getDeliveryStatusLabel,
   formatDeliverySummary,
 } from "@/lib/delivery";
 import { isTransportSchemaError, withTransportDefaults } from "@/lib/orderRequests";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 type RequestStatus = "pending" | "approved" | "declined" | "confirmed" | "fulfilled" | "countered";
 type DeliveryStatus = "pending_pickup" | "in_transit" | "delivered";
@@ -65,6 +66,8 @@ const Requests = () => {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
   const role = user?.user_metadata?.role;
+  const { language } = useLanguage();
+  const isAz = language === "az";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -292,6 +295,18 @@ const Requests = () => {
     customerRequests?.some((request) => request.delivery_method !== null) ||
     farmerRequests?.some((request) => request.delivery_method !== null);
 
+  const getStatusLabel = (status: RequestStatus) => {
+    if (!isAz) return status;
+    return {
+      pending: "gözləmədə",
+      approved: "təsdiqlənib",
+      declined: "rədd edilib",
+      confirmed: "ödəniş edilib",
+      fulfilled: "tamamlanıb",
+      countered: "əks təklif",
+    }[status];
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -299,9 +314,9 @@ const Requests = () => {
         <section className="py-12 lg:py-20">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-8">
-              <h1 className="text-3xl font-bold text-foreground">Active Requests</h1>
+              <h1 className="text-3xl font-bold text-foreground">{isAz ? "Aktiv sorğular" : "Active Requests"}</h1>
               <Link to="/history">
-                <Button variant="outline">View History</Button>
+                <Button variant="outline">{isAz ? "Tarixçəyə bax" : "View History"}</Button>
               </Link>
             </div>
 
@@ -320,7 +335,7 @@ const Requests = () => {
                   </div>
                 )}
                 {!customerLoading && (!customerRequests || customerRequests.length === 0) && (
-                  <div className="text-muted-foreground">No active requests.</div>
+                  <div className="text-muted-foreground">{isAz ? "Aktiv sorğu yoxdur." : "No active requests."}</div>
                 )}
                 {!customerLoading && customerRequests && customerRequests.length > 0 && (
                   <div className="grid md:grid-cols-2 gap-4">
@@ -334,42 +349,42 @@ const Requests = () => {
                                 {request.products?.farmer_profiles?.farm_name}
                               </p>
                             </div>
-                            <Badge variant="secondary">{request.status}</Badge>
+                            <Badge variant="secondary">{getStatusLabel(request.status)}</Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {request.requested_quantity} {request.products?.unit}
                           </div>
                           {request.status === "countered" && request.counter_quantity && (
                             <div className="text-sm text-muted-foreground">
-                              Countered to {request.counter_quantity} {request.products?.unit}
+                              {isAz ? "Əks təklif olunan miqdar:" : "Countered to"} {request.counter_quantity} {request.products?.unit}
                             </div>
                           )}
                           {request.farmer_message && (
                             <div className="text-xs text-muted-foreground">
-                              Note: {request.farmer_message}
+                              {isAz ? "Qeyd:" : "Note:"} {request.farmer_message}
                             </div>
                           )}
                           {request.delivery_method && (
                             <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
-                              <p className="font-medium text-foreground">Transport</p>
-                              <p>{formatDeliverySummary(request)}</p>
+                              <p className="font-medium text-foreground">{isAz ? "Çatdırılma" : "Transport"}</p>
+                              <p>{formatDeliverySummary(request, language)}</p>
                               {request.delivery_status && (
-                                <p>Status: {DELIVERY_STATUS_LABELS[request.delivery_status]}</p>
+                                <p>{isAz ? "Status" : "Status"}: {getDeliveryStatusLabel(request.delivery_status, language)}</p>
                               )}
                             </div>
                           )}
                           {request.status === "approved" && (
                             <Link to={`/checkout/${request.id}`}>
-                              <Button size="sm">Confirm Order</Button>
+                              <Button size="sm">{isAz ? "Sifarişi təsdiq et" : "Confirm Order"}</Button>
                             </Link>
                           )}
                           {request.status === "countered" && (
                             <div className="flex gap-2">
                               <Link to={`/checkout/${request.id}`}>
-                                <Button size="sm">Accept Counter</Button>
+                                <Button size="sm">{isAz ? "Əks təklifi qəbul et" : "Accept Counter"}</Button>
                               </Link>
                               <Button size="sm" variant="outline" onClick={() => handleCustomerDecline(request.id)}>
-                                Decline
+                                {isAz ? "Rədd et" : "Decline"}
                               </Button>
                             </div>
                           )}
@@ -396,7 +411,7 @@ const Requests = () => {
                   </div>
                 )}
                 {!farmerLoading && (!farmerRequests || farmerRequests.length === 0) && (
-                  <div className="text-muted-foreground">No active requests.</div>
+                  <div className="text-muted-foreground">{isAz ? "Aktiv sorğu yoxdur." : "No active requests."}</div>
                 )}
                 {!farmerLoading && farmerRequests && farmerRequests.length > 0 && (
                   <div className="grid md:grid-cols-2 gap-4">
@@ -408,40 +423,40 @@ const Requests = () => {
                               <p className="font-semibold text-foreground">{request.products?.name}</p>
                               <p className="text-xs text-muted-foreground">{request.profiles?.full_name}</p>
                             </div>
-                            <Badge variant="secondary">{request.status}</Badge>
+                            <Badge variant="secondary">{getStatusLabel(request.status)}</Badge>
                           </div>
                           <div className="text-sm text-muted-foreground">
                             {request.requested_quantity} {request.products?.unit}
                           </div>
                           {request.customer_message && (
                             <div className="text-xs text-muted-foreground">
-                              Customer: {request.customer_message}
+                              {isAz ? "Müştəri qeydi:" : "Customer:"} {request.customer_message}
                             </div>
                           )}
                           {request.delivery_method && (
                             <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground space-y-1">
-                              <p className="font-medium text-foreground">Transport plan</p>
-                              <p>{formatDeliverySummary(request)}</p>
+                              <p className="font-medium text-foreground">{isAz ? "Çatdırılma planı" : "Transport plan"}</p>
+                              <p>{formatDeliverySummary(request, language)}</p>
                               {request.delivery_provider_type && (
-                                <p>Provider: {DELIVERY_PROVIDER_LABELS[request.delivery_provider_type]}</p>
+                                <p>{isAz ? "Daşıyıcı" : "Provider"}: {getDeliveryProviderLabel(request.delivery_provider_type, language)}</p>
                               )}
                               {request.delivery_schedule_type && (
-                                <p>Timing: {DELIVERY_SCHEDULE_LABELS[request.delivery_schedule_type]}</p>
+                                <p>{isAz ? "Vaxt" : "Timing"}: {getDeliveryScheduleLabel(request.delivery_schedule_type, language)}</p>
                               )}
                               {request.delivery_status && (
-                                <p>Status: {DELIVERY_STATUS_LABELS[request.delivery_status]}</p>
+                                <p>{isAz ? "Status" : "Status"}: {getDeliveryStatusLabel(request.delivery_status, language)}</p>
                               )}
-                              {request.delivery_notes && <p>Notes: {request.delivery_notes}</p>}
+                              {request.delivery_notes && <p>{isAz ? "Qeyd" : "Notes"}: {request.delivery_notes}</p>}
                             </div>
                           )}
                           {request.status === "pending" && (
                             <div className="space-y-2">
                               <div className="flex gap-2">
                                 <Button size="sm" onClick={() => handleFarmerUpdate(request.id, "approved")}>
-                                  Approve
+                                  {isAz ? "Təsdiq et" : "Approve"}
                                 </Button>
                                 <Button size="sm" variant="outline" onClick={() => handleFarmerUpdate(request.id, "declined")}>
-                                  Decline
+                                  {isAz ? "Rədd et" : "Decline"}
                                 </Button>
                               </div>
                               <div className="flex gap-2">
@@ -454,13 +469,13 @@ const Requests = () => {
                                     handleFarmerCounter(request.id, qty, counterMessages[request.id] || null);
                                   }}
                                 >
-                                  Counter
+                                  {isAz ? "Əks təklif et" : "Counter"}
                                 </Button>
                                 <input
                                   className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                                   type="number"
                                   min="1"
-                                  placeholder="Counter qty"
+                                  placeholder={isAz ? "Əks təklif miqdarı" : "Counter qty"}
                                   value={counterValues[request.id] || ""}
                                   onChange={(e) =>
                                     setCounterValues((prev) => ({ ...prev, [request.id]: e.target.value }))
@@ -469,7 +484,7 @@ const Requests = () => {
                               </div>
                               <textarea
                                 className="min-h-[70px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                                placeholder="Optional note to customer"
+                                placeholder={isAz ? "Müştəri üçün əlavə qeyd" : "Optional note to customer"}
                                 value={counterMessages[request.id] || ""}
                                 onChange={(e) =>
                                   setCounterMessages((prev) => ({ ...prev, [request.id]: e.target.value }))
@@ -485,7 +500,7 @@ const Requests = () => {
                                   variant={request.delivery_status === "pending_pickup" ? "default" : "outline"}
                                   onClick={() => handleDeliveryStatusUpdate(request.id, "pending_pickup")}
                                 >
-                                  Pending Pickup
+                                  {isAz ? "Götürülmə gözlənilir" : "Pending Pickup"}
                                 </Button>
                                 {request.delivery_method === "third_party" && (
                                   <Button
@@ -493,11 +508,11 @@ const Requests = () => {
                                     variant={request.delivery_status === "in_transit" ? "default" : "outline"}
                                     onClick={() => handleDeliveryStatusUpdate(request.id, "in_transit")}
                                   >
-                                    In Transit
+                                    {isAz ? "Yoldadır" : "In Transit"}
                                   </Button>
                                 )}
                                 <Button size="sm" onClick={() => handleDeliveryStatusUpdate(request.id, "delivered")}>
-                                  Mark Delivered
+                                  {isAz ? "Çatdırıldı" : "Mark Delivered"}
                                 </Button>
                               </div>
                             </div>

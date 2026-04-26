@@ -7,10 +7,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MapPin, Leaf, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const FeaturedFarmersSection = () => {
   const { user } = useAuth();
   const role = user?.user_metadata?.role;
+  const { language } = useLanguage();
+  const isAz = language === "az";
   const farmersHref = !user ? "/auth?mode=login" : role === "customer" ? "/farmers" : "/dashboard";
   const farmerDetailHref = (farmerId: string) =>
     !user ? "/auth?mode=login" : role === "customer" ? `/farmer/${farmerId}` : "/dashboard";
@@ -43,13 +46,15 @@ const FeaturedFarmersSection = () => {
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
-            Explore Producers
+            {isAz ? "İstehsalçılar" : "Explore Producers"}
           </span>
           <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
-            Meet Our <span className="text-primary">Featured Producers</span>
+            {isAz ? <>Seçilmiş <span className="text-primary">istehsalçılarımızla tanış olun</span></> : <>Meet Our <span className="text-primary">Featured Producers</span></>}
           </h2>
           <p className="text-muted-foreground text-lg">
-            Discover verified farmers bringing fresh, quality produce from across Azerbaijan
+            {isAz
+              ? "Azərbaycanın müxtəlif bölgələrindən təzə və keyfiyyətli məhsul təqdim edən təsdiqlənmiş fermerləri kəşf edin"
+              : "Discover verified farmers bringing fresh, quality produce from across Azerbaijan"}
           </p>
         </div>
 
@@ -74,15 +79,17 @@ const FeaturedFarmersSection = () => {
           <div className="text-center py-12 bg-card rounded-2xl border border-border">
             <Leaf className="w-16 h-16 text-primary/40 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Be the First Farmer!
+              {isAz ? "İlk fermer siz olun" : "Be the First Farmer!"}
             </h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Join FarmMarket and become a featured producer. Reach thousands of customers directly.
+              {isAz
+                ? "FarmMarket-ə qoşulun və seçilmiş istehsalçılar arasında yer alın. Minlərlə alıcıya birbaşa çıxış əldə edin."
+                : "Join FarmMarket and become a featured producer. Reach thousands of customers directly."}
             </p>
             <Link to={farmersHref}>
               <Button size="lg">
                 <Leaf className="w-4 h-4 mr-2" />
-                View Farmers
+                {isAz ? "Fermerlərə bax" : "View Farmers"}
               </Button>
             </Link>
           </div>
@@ -126,7 +133,7 @@ const FeaturedFarmersSection = () => {
                           ))}
                           {farmer.product_types.length > 3 && (
                             <Badge variant="outline" className="text-xs">
-                              +{farmer.product_types.length - 3} more
+                              +{farmer.product_types.length - 3} {isAz ? "daha" : "more"}
                             </Badge>
                           )}
                         </div>
@@ -134,13 +141,13 @@ const FeaturedFarmersSection = () => {
                       <div className="flex items-center justify-between pt-2 border-t border-border">
                         {farmer.years_of_experience ? (
                           <span className="text-sm text-muted-foreground">
-                            {farmer.years_of_experience}+ years experience
+                            {isAz ? `${farmer.years_of_experience}+ il təcrübə` : `${farmer.years_of_experience}+ years experience`}
                           </span>
                         ) : (
-                          <span className="text-sm text-muted-foreground">New farmer</span>
+                          <span className="text-sm text-muted-foreground">{isAz ? "Yeni fermer" : "New farmer"}</span>
                         )}
                         <span className="text-sm text-primary font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
-                          View <ArrowRight className="w-3 h-3" />
+                          {isAz ? "Bax" : "View"} <ArrowRight className="w-3 h-3" />
                         </span>
                       </div>
                     </CardContent>
@@ -151,7 +158,7 @@ const FeaturedFarmersSection = () => {
             <div className="text-center mt-10">
               <Link to={farmersHref}>
                 <Button variant="outline" size="lg">
-                  View All Farmers
+                  {isAz ? "Bütün fermerlərə bax" : "View All Farmers"}
                   <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </Link>

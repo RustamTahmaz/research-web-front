@@ -1,6 +1,31 @@
 import { Star, Quote } from "lucide-react";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
-const testimonials = [
+const testimonials = {
+  az: [
+    {
+      name: "İlham Əliyev",
+      role: "Fermer, Gəncə bölgəsi",
+      content: "FarmMarket-dən əvvəl pomidorlarımı vasitəçilərə çox ucuz satırdım. İndi Bakıda restoranlarla birbaşa əlaqə qurur və daha çox gəlir əldə edirəm.",
+      rating: 5,
+      avatar: "İ",
+    },
+    {
+      name: "Aysel Məmmədova",
+      role: "Restoran sahibi, Bakı",
+      content: "Məhsulların keyfiyyəti çox yüksəkdir. Tərəvəzlərin hansı fermadan gəldiyini görə bilirəm və müştərilərimiz bu şəffaflığı bəyənir.",
+      rating: 5,
+      avatar: "A",
+    },
+    {
+      name: "Rəşid Həsənov",
+      role: "Fermer, Lənkəran",
+      content: "Platformadan istifadə etmək çox asandır. Sitrus məhsullarımı yerləşdirirəm və qısa müddətdə sorğular alıram.",
+      rating: 5,
+      avatar: "R",
+    },
+  ],
+  en: [
   {
     name: "Ilham Aliyev",
     role: "Farmer, Ganja Region",
@@ -22,28 +47,31 @@ const testimonials = [
     rating: 5,
     avatar: "R",
   },
-];
+  ],
+};
 
 const TestimonialsSection = () => {
+  const { language } = useLanguage();
+  const isAz = language === "az";
   return (
     <section className="py-20 lg:py-28 bg-muted/30">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center max-w-2xl mx-auto mb-12 lg:mb-16">
           <span className="inline-block px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold mb-4">
-            Success Stories
+            {isAz ? "Uğur hekayələri" : "Success Stories"}
           </span>
           <h2 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-4">
-            What Our <span className="text-primary">Community</span> Says
+            {isAz ? <>İcmamızın <span className="text-primary">rəyləri</span></> : <>What Our <span className="text-primary">Community</span> Says</>}
           </h2>
           <p className="text-muted-foreground text-lg">
-            Real stories from farmers and buyers who have transformed their businesses
+            {isAz ? "Fermer və alıcıların real təcrübələri" : "Real stories from farmers and buyers who have transformed their businesses"}
           </p>
         </div>
 
         {/* Testimonials Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-          {testimonials.map((testimonial, index) => (
+          {testimonials[language].map((testimonial, index) => (
             <div 
               key={testimonial.name}
               className="bg-card rounded-2xl p-6 lg:p-8 border border-border shadow-soft hover:shadow-medium transition-all duration-300 hover-lift animate-fade-in-up"

@@ -6,6 +6,7 @@ import { Menu, X, Leaf, User, ShoppingCart, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/i18n/LanguageProvider";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,6 +14,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { language, setLanguage } = useLanguage();
+  const isAz = language === "az";
 
   const { data: profile } = useQuery({
     queryKey: ["profile-role", user?.id],
@@ -61,23 +64,23 @@ const Navbar = () => {
 
   const navLinks = isFarmer
     ? [
-        { name: "Dashboard", href: "/dashboard", isRoute: true },
-        { name: "Marketplace", href: "/farmers", isRoute: true },
-        { name: "Products", href: "/products", isRoute: true },
+        { name: isAz ? "İdarə paneli" : "Dashboard", href: "/dashboard", isRoute: true },
+        { name: isAz ? "Bazar" : "Marketplace", href: "/farmers", isRoute: true },
+        { name: isAz ? "Məhsullar" : "Products", href: "/products", isRoute: true },
       ]
     : [
-        { name: "Home", href: landingHref(), isRoute: true },
-        { name: "Products", href: landingHref("products"), isRoute: false },
-        { name: "Explore Producers", href: landingHref("producers"), isRoute: false },
-        { name: "How It Works", href: landingHref("how-it-works"), isRoute: false },
-        { name: "About", href: landingHref("about"), isRoute: false },
+        { name: isAz ? "Ana səhifə" : "Home", href: landingHref(), isRoute: true },
+        { name: isAz ? "Məhsullar" : "Products", href: landingHref("products"), isRoute: false },
+        { name: isAz ? "İstehsalçılar" : "Explore Producers", href: landingHref("producers"), isRoute: false },
+        { name: isAz ? "Necə işləyir" : "How It Works", href: landingHref("how-it-works"), isRoute: false },
+        { name: isAz ? "Haqqımızda" : "About", href: landingHref("about"), isRoute: false },
       ];
 
   const handleSignOut = async () => {
     await signOut();
     toast({
-      title: "Signed out",
-      description: "You have been successfully signed out.",
+      title: isAz ? "Çıxış edildi" : "Signed out",
+      description: isAz ? "Hesabdan uğurla çıxış etdiniz." : "You have been successfully signed out.",
     });
     navigate("/");
   };
@@ -127,10 +130,26 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center gap-3">
+            <div className="inline-flex items-center rounded-lg border border-border overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setLanguage("az")}
+                className={`px-3 py-2 text-xs font-semibold ${isAz ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+              >
+                AZ
+              </button>
+              <button
+                type="button"
+                onClick={() => setLanguage("en")}
+                className={`px-3 py-2 text-xs font-semibold ${!isAz ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground"}`}
+              >
+                EN
+              </button>
+            </div>
             <Link to="/requests">
               <Button variant="ghost" className="text-muted-foreground gap-2">
                 <ShoppingCart className="w-5 h-5" />
-                Requests
+                {isAz ? "Sorğular" : "Requests"}
                 {pendingCount ? (
                   <span className="ml-2 inline-flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] px-2 py-0.5">
                     {pendingCount}
@@ -142,19 +161,19 @@ const Navbar = () => {
             {user ? (
               <Button variant="outline" className="gap-2" onClick={handleSignOut}>
                 <LogOut className="w-4 h-4" />
-                Sign Out
+                {isAz ? "Çıxış" : "Sign Out"}
               </Button>
             ) : (
               <>
                 <Link to="/auth?mode=login">
                   <Button variant="outline" className="gap-2">
                     <User className="w-4 h-4" />
-                    Sign In
+                    {isAz ? "Daxil ol" : "Sign In"}
                   </Button>
                 </Link>
                 {profile?.role !== "customer" && (
                   <Link to="/auth?mode=register&role=farmer">
-                    <Button>Start Selling</Button>
+                    <Button>{isAz ? "Satışa başla" : "Start Selling"}</Button>
                   </Link>
                 )}
               </>
@@ -174,6 +193,14 @@ const Navbar = () => {
         {isMenuOpen && (
           <div className="lg:hidden py-4 border-t border-border animate-fade-in-down">
             <div className="flex flex-col gap-2">
+              <div className="flex gap-2 px-4 pb-2">
+                <Button size="sm" variant={isAz ? "default" : "outline"} onClick={() => setLanguage("az")}>
+                  AZ
+                </Button>
+                <Button size="sm" variant={!isAz ? "default" : "outline"} onClick={() => setLanguage("en")}>
+                  EN
+                </Button>
+              </div>
               {navLinks.map((link) =>
                 link.isRoute ? (
                   <Link
@@ -206,19 +233,19 @@ const Navbar = () => {
                 {user ? (
                   <Button variant="outline" className="w-full gap-2" onClick={handleSignOut}>
                     <LogOut className="w-4 h-4" />
-                    Sign Out
+                    {isAz ? "Çıxış" : "Sign Out"}
                   </Button>
                 ) : (
                   <>
                     <Link to="/auth?mode=login" onClick={() => setIsMenuOpen(false)}>
                       <Button variant="outline" className="w-full gap-2">
                         <User className="w-4 h-4" />
-                        Sign In
+                        {isAz ? "Daxil ol" : "Sign In"}
                       </Button>
                     </Link>
                     {profile?.role !== "customer" && (
                       <Link to="/auth?mode=register&role=farmer" onClick={() => setIsMenuOpen(false)}>
-                        <Button className="w-full">Start Selling</Button>
+                        <Button className="w-full">{isAz ? "Satışa başla" : "Start Selling"}</Button>
                       </Link>
                     )}
                   </>
